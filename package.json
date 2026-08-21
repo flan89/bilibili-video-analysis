@@ -1,0 +1,44 @@
+{
+  "name": "bilibili-video-analysis-skill",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "pi": {
+    "skills": [
+      "."
+    ]
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build-runtime.mjs",
+    "build:types": "tsc -p tsconfig.build.json",
+    "release": "node scripts/build-release.mjs",
+    "test:release": "node scripts/verify-release.mjs",
+    "prepare": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run tests/unit",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration --no-file-parallelism",
+    "tool": "node dist/cli.mjs tool",
+    "doctor": "node dist/cli.mjs doctor",
+    "setup": "node dist/cli.mjs setup",
+    "tool:dev": "tsx scripts/cli/run-tool.ts tool",
+    "doctor:dev": "tsx scripts/cli/run-tool.ts doctor",
+    "setup:dev": "tsx scripts/cli/run-tool.ts setup",
+    "agent-run:dump": "tsx eval/cli/dump-agent-run.ts",
+    "agent-run:verify": "tsx eval/cli/verify-agent-runs.ts",
+    "agent-run:judge": "tsx eval/cli/run-semantic-judge.ts"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.28.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0",
+    "vitest": "^4.1.10"
+  }
+}

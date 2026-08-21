@@ -1,0 +1,26 @@
+{
+  "lan": "ai-zh",
+  "lanDoc": "中文",
+  "subtitles": [
+    {
+      "id": "10001",
+      "lan": "ai-zh",
+      "lanDoc": "中文",
+      "lanDocBrief": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/subtitle/example-ai-zh.json",
+      "type": 1,
+      "aiStatus": 2,
+      "format": 0
+    },
+    {
+      "id": "10002",
+      "lan": "en-US",
+      "lanDoc": "English (US)",
+      "lanDocBrief": "English",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/subtitle/example-en.json",
+      "type": 0,
+      "aiStatus": 0,
+      "format": 0
+    }
+  ]
+}

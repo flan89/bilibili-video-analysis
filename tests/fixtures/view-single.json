@@ -1,0 +1,43 @@
+{
+  "bvid": "BV15wGR6CEhY",
+  "aid": 114550001234567,
+  "cid": 3001002001,
+  "title": "Pi Agent：比Claude Code和Codex更适合普通人的AI工具",
+  "desc": "用于 Skill metadata fixture 的示例简介。",
+  "pic": "https://i0.hdslb.com/bfs/archive/example.jpg",
+  "pubdate": 1779667200,
+  "ctime": 1779660000,
+  "duration": 2020,
+  "tid": 95,
+  "tname": "数码",
+  "copyright": 1,
+  "videos": 1,
+  "owner": {
+    "mid": 123456,
+    "name": "示例UP主",
+    "face": "https://i0.hdslb.com/bfs/face/example.jpg"
+  },
+  "stat": {
+    "view": 10000,
+    "danmaku": 120,
+    "reply": 88,
+    "favorite": 560,
+    "coin": 300,
+    "share": 40,
+    "like": 1200
+  },
+  "pages": [
+    {
+      "cid": 3001002001,
+      "page": 1,
+      "from": "vupload",
+      "part": "正片",
+      "duration": 2020,
+      "dimension": {
+        "width": 1920,
+        "height": 1080,
+        "rotate": 0
+      }
+    }
+  ]
+}

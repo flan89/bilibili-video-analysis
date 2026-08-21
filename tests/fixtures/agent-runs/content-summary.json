@@ -1,0 +1,31 @@
+{
+  "caseId": "content-summary",
+  "category": "content_summary",
+  "prompt": "帮我把这个视频讲明白：作者的核心结论是什么，主要依据是什么？请标出关键时间。https://www.bilibili.com/video/BV1iQQYB7EpN?p=4",
+  "skillVersion": "0.6.0",
+  "toolTrace": [
+    {
+      "tool": "metadata",
+      "input": { "video": "BV1iQQYB7EpN" },
+      "output": { "title": "示例视频" },
+      "outcome": "success",
+      "calledAt": "2026-08-17T22:00:00+08:00"
+    },
+    {
+      "tool": "subtitle",
+      "input": { "video": "BV1iQQYB7EpN", "page": 4 },
+      "output": { "complete": true, "itemCount": 42 },
+      "outcome": "success",
+      "calledAt": "2026-08-17T22:00:05+08:00"
+    }
+  ],
+  "finalAnswer": "作者在 03:15 提出了核心结论：……（依据来自 04:20-05:10）",
+  "recordedAt": "2026-08-17T22:00:30+08:00",
+  "evaluation": {
+    "deterministic": [
+      { "rule": "must_call_subtitle", "passed": true },
+      { "rule": "must_not_call_comments", "passed": true }
+    ],
+    "summary": "fixture 测试用"
+  }
+}

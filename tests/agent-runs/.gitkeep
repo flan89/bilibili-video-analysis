@@ -1,0 +1,2 @@
+# 占位文件，让 tests/agent-runs/ 目录在 git 中保留
+# 真实记录由 npm run agent-run:dump 生成

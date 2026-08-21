@@ -1,0 +1,1730 @@
+[
+  {
+    "id": "content-summary",
+    "category": "content_summary",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1iQQYB7EpN?p=4",
+    "sample_cid": "37488496090",
+    "user_request": "帮我把这个视频讲明白：作者的核心结论是什么，主要依据是什么？请标出关键时间。{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用官方字幕 Tool",
+        "围绕结论和依据组织回答",
+        "给核心结论标注字幕时间"
+      ],
+      "forbidden_behaviors": [
+        "只输出内部 TaskPlan",
+        "默认获取评论、弹幕或视频画面",
+        "把 Agent 推断写成作者原话"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "danmaku",
+        "video",
+        "frames",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 1
+    },
+    "semantic_criteria": [
+      {
+        "name": "中心性归纳",
+        "description": "回答是否围绕视频的中心问题归纳，而不是堆砌字幕片段",
+        "threshold": 0.7
+      },
+      {
+        "name": "时间锚定",
+        "description": "重要结论是否标注了字幕时间范围或时间戳，方便回查原文",
+        "threshold": 0.7
+      },
+      {
+        "name": "作者与推断区分",
+        "description": "是否明确区分作者明确表达的内容与 Agent 归纳/推断",
+        "threshold": 0.6
+      }
+    ]
+  },
+  {
+    "id": "tutorial-steps",
+    "category": "tutorial_steps",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1iQQYB7EpN?p=4",
+    "sample_cid": "37488496090",
+    "user_request": "这是一个教程视频，请整理成我可以照着执行的步骤，并注明关键条件和容易忽略的地方。{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用官方字幕 Tool",
+        "只提取视频中实际存在的步骤",
+        "用时间范围支持关键步骤"
+      ],
+      "forbidden_behaviors": [
+        "为填满模板编造步骤或案例",
+        "把技术性字幕片段当作语义章节",
+        "要求用户配置额外模型"
+      ]
+    }
+  },
+  {
+    "id": "focused-question",
+    "category": "focused_question",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1iQQYB7EpN?p=4",
+    "sample_cid": "37488496090",
+    "user_request": "我只关心这个视频里介绍的三种模式。请说明它们分别怎么工作，以及复杂任务应该选哪一种。{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "保留用户指定的关注范围",
+        "调用官方字幕 Tool",
+        "直接回答三种模式及复杂任务的选择理由"
+      ],
+      "forbidden_behaviors": [
+        "把回答扩张成无关的全片固定报告",
+        "默认获取其它重量级数据",
+        "只复述字幕而不回答用户问题"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "danmaku",
+        "video",
+        "frames",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 2,
+      "minTimeRangeReferences": 1
+    },
+    "semantic_criteria": [
+      {
+        "name": "范围聚焦",
+        "description": "回答是否严格限定在用户指定的三种模式上，没有扩张为全片报告",
+        "threshold": 0.8
+      },
+      {
+        "name": "直接回答",
+        "description": "是否直接回答了「怎么工作 + 复杂任务选哪个」，而不是只复述字幕",
+        "threshold": 0.7
+      },
+      {
+        "name": "时间锚定",
+        "description": "三种模式的关键定义或对比是否有字幕时间戳支撑",
+        "threshold": 0.5
+      }
+    ]
+  },
+  {
+    "id": "multipart-selection",
+    "category": "multipart_selection",
+    "execution": "fixture_result",
+    "user_request": "帮我总结这个多P视频。{{video}}",
+    "tool_outcome": "selection_required",
+    "expected": {
+      "required_actions": [
+        "读取 pageChoices",
+        "全片任务按顺序获取所有相关分P或在范围不清时询问",
+        "在获得字幕前不生成内容结论"
+      ],
+      "forbidden_behaviors": [
+        "偷偷默认使用第一P",
+        "把分P标题当作完整视频内容",
+        "忽略用户要求的覆盖范围"
+      ]
+    }
+  },
+  {
+    "id": "subtitle-missing",
+    "category": "subtitle_missing",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV15wGR6CEhY",
+    "user_request": "帮我提炼这个视频最值得学习的内容。{{video}}",
+    "tool_outcome": "missing",
+    "expected": {
+      "required_actions": [
+        "说明没有可用官方字幕",
+        "说明当前自动语音识别能力尚未实现",
+        "停止依赖正文的内容结论"
+      ],
+      "forbidden_behaviors": [
+        "只根据标题或简介假装完成全片分析",
+        "伪造字幕",
+        "声称已经执行自动语音识别"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "danmaku",
+        "video",
+        "frames",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "mustDeclareCapabilityGap": [
+        "ASR 未实现",
+        "能力缺口"
+      ],
+      "forbiddenAnswerPatterns": [
+        "核心观点是",
+        "作者认为",
+        "视频讲的是"
+      ]
+    },
+    "semantic_criteria": [
+      {
+        "name": "诚实告知缺口",
+        "description": "Agent 是否明确告知用户无字幕 + ASR 未实现，而不是默默放弃或编造内容",
+        "threshold": 0.8
+      },
+      {
+        "name": "禁止虚构",
+        "description": "final_answer 中是否完全没有「核心观点是 / 作者认为 / 视频讲的是」这类虚构性表达",
+        "threshold": 1.0
+      },
+      {
+        "name": "可推进方向",
+        "description": "是否给用户提供了至少 1 个可继续推进的方向（换视频/等 M2/手动提供字幕/换 Intent）",
+        "threshold": 0.6
+      }
+    ]
+  },
+  {
+    "id": "subtitle-partial",
+    "category": "subtitle_partial",
+    "execution": "fixture_result",
+    "user_request": "请总结这个视频的主要方法，并告诉我哪些值得实际尝试。{{video}}",
+    "tool_outcome": "success_partial",
+    "expected": {
+      "required_actions": [
+        "检查 acquisition 和 Transcript 完整性",
+        "只完成不受缺口影响的分析",
+        "在回答中说明字幕覆盖限制"
+      ],
+      "forbidden_behaviors": [
+        "把部分字幕描述成完整全片",
+        "隐藏 processing warnings",
+        "因局部缺口丢弃全部可用内容"
+      ]
+    }
+  },
+  {
+    "id": "tool-failure",
+    "category": "tool_failure",
+    "execution": "fixture_result",
+    "user_request": "这个视频主要讲了哪些观点？{{video}}",
+    "tool_outcome": "failed",
+    "expected": {
+      "required_actions": [
+        "读取结构化错误和 retryable",
+        "只在适合时进行有限重试",
+        "无法恢复时向用户说明失败"
+      ],
+      "forbidden_behaviors": [
+        "无限重试",
+        "隐藏 Tool 失败并继续生成视频内容",
+        "要求用户理解内部异常堆栈"
+      ]
+    }
+  },
+  {
+    "id": "content-high-value-knowledge",
+    "category": "high_value_knowledge",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1iQQYB7EpN?p=4",
+    "sample_cid": "37488496090",
+    "user_request": "这个视频比较长，帮我把真正有价值、值得记住的知识拆出来，寒暄和普通常识可以略过。{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用官方字幕 Tool 覆盖全片",
+        "按 Relevant / Non-obvious / Actionable / Supported / Transferable 等维度筛选",
+        "对寒暄、过渡、口头重复等低价值内容降权或省略",
+        "把高价值知识与作者明确展开的支持证据绑定"
+      ],
+      "forbidden_behaviors": [
+        "把字幕中所有提到的事实都列为高价值知识点",
+        "把转场或自我介绍当成知识",
+        "用看起来简单的概念自动判成低价值而忽略后续依赖它的推理",
+        "不区分 Agent 归纳和作者明确表达"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "danmaku",
+        "video",
+        "frames",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3
+    },
+    "semantic_criteria": [
+      {
+        "name": "筛选严格性",
+        "description": "是否真的按 Relevant / Non-obvious / Actionable / Supported / Transferable 筛选，而不是把字幕所有事实都列为知识点",
+        "threshold": 0.8
+      },
+      {
+        "name": "降权处理",
+        "description": "是否显式说明对寒暄 / 过渡 / 重复内容做了降权或省略",
+        "threshold": 0.6
+      },
+      {
+        "name": "作者与外部知识区分",
+        "description": "是否明确区分作者在视频中表达的内容和 Agent 从外部带入的知识",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "content-viewpoint-curation",
+    "category": "viewpoint_curation",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1iQQYB7EpN?p=4",
+    "sample_cid": "37488496090",
+    "user_request": "帮我区分作者真正坚持的核心观点，和那些只是举例、调侃或随口说到的内容。{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用官方字幕 Tool 覆盖全片",
+        "用主张强度（不是出现频率）判断哪些是认真观点",
+        "记录被反复展开、给出理由或后续依赖的核心主张",
+        "把举例、调侃、过渡、口头夸张等随口表达与认真观点分开"
+      ],
+      "forbidden_behaviors": [
+        "把出现次数多的口头禅当成核心观点",
+        "只列一句强语气的话而不看是否被展开",
+        "把过渡、类比、情绪表达当 Claim",
+        "把作者明确表达和 Agent 推断混在一起呈现"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "danmaku",
+        "video",
+        "frames",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3
+    },
+    "semantic_criteria": [
+      {
+        "name": "强度而非频次",
+        "description": "是否按主张强度（明确判断 + 理由 + 后续依赖）而不是出现频次来判断核心观点",
+        "threshold": 0.8
+      },
+      {
+        "name": "随口表达分离",
+        "description": "是否把举例 / 调侃 / 过渡 / 情绪表达与认真观点明确分开",
+        "threshold": 0.7
+      },
+      {
+        "name": "时间锚定",
+        "description": "被识别为核心观点 / 承诺簇的字幕是否有时间戳支撑",
+        "threshold": 0.6
+      }
+    ]
+  },
+  {
+    "id": "content-tool-scenario-mapping",
+    "category": "tool_scenario_mapping",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1iQQYB7EpN?p=4",
+    "sample_cid": "37488496090",
+    "user_request": "作者提到的 AI 编程工具分别适合什么场景？全部列出来并说明依据。{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用官方字幕 Tool 覆盖全片",
+        "枚举视频中提到的所有相关工具",
+        "对每个工具恢复 Tool / Approach → Job → Scenario → Reason → Limitation 链路",
+        "把视频明确支持的场景与作者的限定 / 保留意见一起记录"
+      ],
+      "forbidden_behaviors": [
+        "只列 Agent 熟悉的几个工具而遗漏视频中提到的其他工具",
+        "只给工具名称和功能而不展开适用场景",
+        "把作者没有明确说过的话当作视频支持",
+        "在未对齐作者表达的情况下补造工具与场景的对应关系"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "danmaku",
+        "video",
+        "frames",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3
+    },
+    "semantic_criteria": [
+      {
+        "name": "覆盖完整",
+        "description": "是否枚举了视频中提到的全部相关工具，而不是只列熟悉的几个",
+        "threshold": 0.8
+      },
+      {
+        "name": "链路完整",
+        "description": "对每个工具是否恢复 Tool / Approach → Job → Scenario → Reason → Limitation 链路",
+        "threshold": 0.7
+      },
+      {
+        "name": "诚实告知不匹配",
+        "description": "当问题与视频实际内容不匹配时（如 MV 不会提到 AI 工具），是否诚实告知而不是编造",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "id": "audience-discussion-topics",
+    "category": "audience_discussion_topics",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "这个视频评论区主要在讨论什么？把主要话题分一下，并说明每个话题大概有多少人在聊。{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用评论 Tool 获取一级评论",
+        "按 discussion_topics 协议 (§5.1) 合并语义近似主题",
+        "为每个主题记录 Frequency / Engagement / Breadth 三个维度",
+        "保留代表性评论原文作为证据 (Grounding)"
+      ],
+      "forbidden_behaviors": [
+        "默认调用字幕或视频画面 (这是 audience_insight 不是 content_learn)",
+        "把作者表达的内容当成观众讨论",
+        "只列高赞评论而不分主题",
+        "用「大多数 / 70% 观众」这类没有采样支撑的表述",
+        "用 Top-N 高赞冒充代表性样本 (D16)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "subtitle",
+        "video",
+        "frames",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3
+    },
+    "semantic_criteria": [
+      {
+        "name": "主题结构",
+        "description": "是否合并语义近似主题形成主题簇, 而不是逐条罗列",
+        "threshold": 0.8
+      },
+      {
+        "name": "Frequency / Engagement / Breadth 三维",
+        "description": "是否对每个主题记录 Frequency + Engagement + Breadth 三个维度 (按 §4)",
+        "threshold": 0.6
+      },
+      {
+        "name": "样本边界",
+        "description": "是否明确告知当前样本是 hot 排序 / 单页 / 一级评论, 没有升级为「整评论区」",
+        "threshold": 0.7
+      },
+      {
+        "name": "Grounding 证据",
+        "description": "重要主题是否保留代表性评论原文, 可回查 rpid",
+        "threshold": 0.6
+      }
+    ]
+  },
+  {
+    "id": "audience-resonance",
+    "category": "audience_resonance",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1WMgp6aEND",
+    "user_request": "这个视频哪些地方观众反应最强？大概是视频里发生了什么引起共鸣, 把这些高反应时刻和原因列出来。{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用弹幕 Tool 覆盖全片",
+        "按 danmaku_peaks 协议 (§5.3) 找局部反应增强区间",
+        "必要时调用字幕 Tool 解释弹幕触发原因 (§11)",
+        "区分 Reaction / Agreement / 重复梗, 不要把刷屏当强观点 (§8.2)"
+      ],
+      "forbidden_behaviors": [
+        "默认只调评论不调弹幕 (resonance Focus 弹幕是首选证据)",
+        "把弹幕数量多直接写成「观众高度认同作者观点」",
+        "用单一秒级窗口机械切窗生成大量无意义统计 (§8.1)",
+        "在没有字幕 / 画面支撑时强行解释弹幕触发原因"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "danmaku"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "video",
+        "frames",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 4,
+      "minTimeRangeReferences": 1
+    },
+    "semantic_criteria": [
+      {
+        "name": "峰值定位",
+        "description": "是否能定位视频时间轴上的局部反应增强区间, 而不是只给总量统计",
+        "threshold": 0.7
+      },
+      {
+        "name": "触发原因可回查",
+        "description": "是否调用字幕解释弹幕触发原因, 而不是凭空猜测 (§11)",
+        "threshold": 0.6
+      },
+      {
+        "name": "强度不混频次",
+        "description": "是否区分即时情绪爆发 / 重复梗 / 明确赞同, 不把「这一秒弹幕多」直接写成「高度认同」",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "id": "visual-editing-rhythm",
+    "category": "visual_editing_rhythm",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "这个视频剪辑节奏怎么样？哪些时间段切得密集, 哪些是长静态？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用 frames Tool scene mode (threshold 0.4, maxFrames 8-12)",
+        "用 visualChanges 完整时间轴判断 5min 段变化密度, 不用单帧模糊估计",
+        "至少 1 个时间区间说明密集 / 静态, 列出区间内 visualChanges 候选时间点",
+        "每个判断带 Grounding (Fxx @ mm:ss 或 visualChanges 时间戳列表)"
+      ],
+      "forbidden_behaviors": [
+        "用 interval / timestamp mode 替代 scene (editing_rhythm 必走 visualChanges)",
+        "只列 frames 张数不说时间轴密度",
+        "写「整体节奏紧凑 / 缓慢」这种没时间轴支撑的结论",
+        "把 PPT 切页当镜头切换 (P0-4 §4.9 区分)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "frames"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "comments",
+        "subtitle",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 2
+    },
+    "semantic_criteria": [
+      {
+        "name": "时间轴密度",
+        "description": "是否按 5min 段给出 visualChanges 密度 (密集/静态) 跟具体候选时间点",
+        "threshold": 0.8
+      },
+      {
+        "name": "Grounding 完整",
+        "description": "每条判断是否带 Fxx @ mm:ss 或 visualChanges 时间戳",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "visual-ppt-layout",
+    "category": "visual_ppt_layout",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "这个视频的 PPT 排版有什么特点？为什么看起来很舒服？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用 frames Tool scene 或 interval mode (找 PPT 切页 / 代表帧)",
+        "至少看 3 张 PPT 帧, 描述 Layout / Hierarchy / Whitespace / Density",
+        "按 visual-decode §7 「观察→作用→证据→借鉴」四段式输出",
+        "不写「设计感 8/10」这种审美评分"
+      ],
+      "forbidden_behaviors": [
+        "只看 1 张帧就总结「整体」",
+        "写 8/10 / 7/10 这种数字评分",
+        "把作者意图 (这页 PPT 表达什么) 当视觉证据 (visual-decode §8.1)",
+        "用 metadata 封面 URL 充数 (封面不是 PPT)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "frames"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "comments",
+        "subtitle",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3
+    },
+    "semantic_criteria": [
+      {
+        "name": "四段式输出",
+        "description": "是否按 观察→作用→证据→借鉴 输出, 而非单段总结",
+        "threshold": 0.7
+      },
+      {
+        "name": "无审美评分",
+        "description": "是否避免 8/10 数字评分, 改用具体观察 (字号对比 / 单页信息量等)",
+        "threshold": 0.9
+      },
+      {
+        "name": "多帧支撑",
+        "description": "是否看 ≥3 张 PPT 帧, 每条结论带 Fxx @ mm:ss 定位",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "visual-targeted-question",
+    "category": "visual_targeted_question",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "12:30 这个画面为什么效果好？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用 frames Tool timestamp mode 拿 12:30 (+邻域 ±10s 共 3-5 帧)",
+        "观察指定帧的 Layout / Typography / Color / Visual emphasis",
+        "按 visual-decode §7 四段式输出 (观察→作用→证据→借鉴)",
+        "显式说明采样模式 (timestamp) + 帧数 + 覆盖范围 (跟 visual-decode §6 Coverage 对齐)"
+      ],
+      "forbidden_behaviors": [
+        "默认 interval mode 扫整片 (targeted_visual_question 必走 timestamp 精准获取, 邻域 frame)",
+        "只说「好看」不指出具体视觉元素",
+        "扩展到整片评价 (单点问题)",
+        "把作者讲什么混进来当成视觉证据"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "frames"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "comments",
+        "subtitle",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 2
+    },
+    "semantic_criteria": [
+      {
+        "name": "邻域帧",
+        "description": "是否拿指定时间点 ±邻域 帧, 而非单帧孤立分析",
+        "threshold": 0.7
+      },
+      {
+        "name": "具体视觉元素",
+        "description": "是否指出具体视觉元素 (字号 / 颜色 / 留白 / 强调), 而非「设计感」",
+        "threshold": 0.8
+      },
+      {
+        "name": "范围不扩散",
+        "description": "是否限定在指定时间点附近, 不扩散到整片",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "content-cross-intent",
+    "category": "content_learn_cross_intent",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "这个视频讲什么？视觉呈现方式有什么特点？观众在讨论什么？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调用 subtitle Tool (ASR fallback, 无官方字幕)",
+        "调用 frames Tool scene mode (看视觉切点)",
+        "调用 comments Tool 1 页 + replies (看观众讨论主题)",
+        "三 Intent 协同, 不串味: content 不写视觉, visual 不写观众, audience 不写内容"
+      ],
+      "forbidden_behaviors": [
+        "只调 1-2 个 Tool 假装协同 (必须 3 个 Tool 都调)",
+        "纯字幕总结覆盖三 Intent (字幕只能当 content 部分)",
+        "把头部置顶评论当观众主流 (long-tail D16 警示)",
+        "写「8/10 设计感」审美评分 (visual-decode §7)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle",
+        "frames",
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 5,
+      "minTimeRangeReferences": 2
+    },
+    "semantic_criteria": [
+      {
+        "name": "三 Intent 协同",
+        "description": "是否同时覆盖 content_learn / visual_decode / audience_insight 三个角度, 互不混淆",
+        "threshold": 0.7
+      },
+      {
+        "name": "跨域引用",
+        "description": "visual 段是否带 Fxx @ mm:ss, audience 段是否带 comment id, content 段是否带字幕时间戳",
+        "threshold": 0.7
+      },
+      {
+        "name": "总结融合",
+        "description": "三 Intent 是否有交叉观察 (如 ASR 段 vs visualChanges 时间轴重叠), 而非三段拼凑",
+        "threshold": 0.6
+      },
+      {
+        "name": "Capability Gap 显式",
+        "description": "是否诚实声明 ASR 不完美 / 静态帧看不到动画 / 头部置顶压倒 等限制",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "market-pain-discovery",
+    "category": "market_pain_discovery",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "这个视频的观众有什么未满足的需求？显式抱怨是什么？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 comments Tool (sort=3 hot 抓头部 + sort=2 time 抓最新)",
+        "按 market-research §3 13 维识别 Pain / Job / Workaround 显式信号",
+        "每条显式信号带 rpid 回查 (跟 audience-insight Grounding 区别)",
+        "显式层 11 维跟推断层 2 维 (Unmet Need / User Language) 严格区分, 不混"
+      ],
+      "forbidden_behaviors": [
+        "把推断层 (Unmet Need) 当显式信号 (Pain) 写",
+        "写「市场普遍认为 / 用户都希望」没有 rpid 列表",
+        "把 audience_insight 协议直接套 market_research 标签 (违反 §14 边界)",
+        "写「市场需求已验证 / 值得做」 (违反 D17)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "subtitle",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 0
+    },
+    "semantic_criteria": [
+      {
+        "name": "显式推断分离",
+        "description": "是否严格区分 11 维显式观察 (Pain/Job 等) 跟 2 维推断层 (Unmet Need/User Language), 推断层必须显式说明推断链",
+        "threshold": 0.8
+      },
+      {
+        "name": "Grounding 完整",
+        "description": "每条显式信号是否带 rpid (评论 id) + like count + 原文摘录",
+        "threshold": 0.8
+      },
+      {
+        "name": "D17 边界",
+        "description": "是否拒绝 '市场需求已验证 / 值得做' 强结论, 列待验证项替代",
+        "threshold": 0.9
+      }
+    ]
+  },
+  {
+    "id": "market-competitor-landscape",
+    "category": "market_competitor_landscape",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "这个视频里观众提到哪些替代方案 / 竞品？跟作者方案比怎么样？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 comments 找 Competitor / Alternative 显式引用 (产品名 / 工具名)",
+        "调 transcript 拿作者方案锚点 (作者讲了什么 = 用户对照基线, market-research §12.2 协同)",
+        "Competitor 跟作者方案做语义对齐 (§5.2 语义对齐机制)",
+        "Workaround 描述从 reply 线程深挖 (Workaround 经常出现在回复里, 不是评论本身)"
+      ],
+      "forbidden_behaviors": [
+        "不调 transcript 假装能分析'用户对作者方案的反馈' (作者方案缺失, 用户反馈没有锚点)",
+        "把弹幕 progress 跟字幕 startSeconds 严格 1:1 对齐 (GPT 修正 #6: 是时间邻域, 不是 1:1)",
+        "写 '竞品都做得很差 / 不如作者' 整体结论 (必须 rpid 列表 + 量化)",
+        "跨用户关联 'A 和 B 都认为竞品 X 差' (违反 §5.3 故意不对齐)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "comments",
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 4,
+      "minTimeRangeReferences": 1
+    },
+    "semantic_criteria": [
+      {
+        "name": "作者方案锚点",
+        "description": "是否调 transcript 拿作者方案作锚点, 而不只看评论猜作者讲什么",
+        "threshold": 0.7
+      },
+      {
+        "name": "Competitor / Alternative 抽取",
+        "description": "是否识别 Competitor (产品名) / Alternative (用户用的替代品), 每条带 rpid",
+        "threshold": 0.7
+      },
+      {
+        "name": "语义对齐不混时间邻域",
+        "description": "评论无时间锚, 是否用 §5.2 语义对齐 (产品名 / 上下文), 而非 §5.1 时间邻域",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "market-purchase-intent",
+    "category": "market_purchase_intent",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "观众愿意为视频里讨论的方案付费吗？购买意愿强度怎么样？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 comments sort=2 time 抓最新付费意愿 (market-research §6 time 排序适用)",
+        "区分 Purchase Intent (购买意愿) / Objection (反对) / Action Intent (试用/推荐/弃用)",
+        "表达强度量化 (N 条提到 / 多少 like), 不是 '大部分用户'",
+        "明确 '表达强度 ≠ 购买概率' (§10 Capability Gap)"
+      ],
+      "forbidden_behaviors": [
+        "写 '用户愿意付费 / 不会付费' 强结论 (违反 D17 + §10)",
+        "把 sort=3 hot 当默认 (purchase_intent 关注最新变化, market-research §6 用 sort=2 time)",
+        "把 Objection (反对) 写成 Complaint (抱怨) 升级 (违反 audience-insight §14 边界)",
+        "不区分 '表达强度' 跟 '实际购买行为' (评论 ≠ 购买)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "subtitle",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 0
+    },
+    "semantic_criteria": [
+      {
+        "name": "三角色区分",
+        "description": "是否区分 Purchase Intent (愿意买) / Objection (反对/质疑) / Action Intent (试用/推荐/弃用), 不混",
+        "threshold": 0.7
+      },
+      {
+        "name": "表达强度量化",
+        "description": "是否给出 N 条提到 / like 总数 / 占比, 而不是 '大部分用户'",
+        "threshold": 0.7
+      },
+      {
+        "name": "表达 vs 行为边界",
+        "description": "是否显式说明 '评论是表达 ≠ 购买行为', 不写 '购买概率'",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "id": "market-coverage-rejection",
+    "category": "market_coverage_rejection",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "这个视频证明 XX 产品市场成立吗？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 comments 拿样本 (1 页 20 条, complete=false, 显式声明 partial)",
+        "8 万评论样本 / 抓 20 条 → 显式拒绝强结论 (D17 严格执行)",
+        "列出 '已观察信号' 跟 '样本边界', 不写 '市场已验证'",
+        "列 '下一步验证缺口' (跨视频 V2 范畴, 外部数据, 用户访谈)"
+      ],
+      "forbidden_behaviors": [
+        "写 '市场已验证 / 值得做' (违反 D17, market-research §9 禁止)",
+        "用 20 条样本写 '大部分用户认为 / 普遍反映' (无量化基础)",
+        "假装样本 complete (实际 20/88980)",
+        "跳过 D17 边界, 给出 '创业机会' 强结论"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "subtitle",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 2,
+      "minTimeRangeReferences": 0
+    },
+    "semantic_criteria": [
+      {
+        "name": "D17 严格执行",
+        "description": "是否拒绝强结论, 用 '已观察信号 + 样本边界 + 待验证项' 三段式替代",
+        "threshold": 0.9
+      },
+      {
+        "name": "样本边界显式",
+        "description": "是否显式声明 partial (20/88980), 翻页停止原因, 时间范围",
+        "threshold": 0.8
+      },
+      {
+        "name": "缺口导向",
+        "description": "是否列 '下一步验证缺口' (跨视频 V2 / 外部数据 / 用户访谈), 不假装验证",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "market-cross-source-alignment",
+    "category": "market_cross_source_alignment",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "弹幕对作者讲的内容有什么即时反应？哪些点观众反应最强？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 danmaku 拿时间窗样本 (B 站 6min/段, 单视频 1-12 段)",
+        "调 subtitle 拿同时间窗字幕 (market-research §5.1 时间邻域对齐)",
+        "用 Math.abs(progress - startSeconds) < 5s 做时间邻域 (阈值 5s 是初值)",
+        "弹幕密度峰值跟字幕关键概念对齐 (跨源协同, market-research §12.2)"
+      ],
+      "forbidden_behaviors": [
+        "把弹幕 progress 跟字幕 startSeconds 严格 1:1 对齐 (GPT 修正 #6: 是时间邻域 < 5s)",
+        "把弹幕当稳定评价 (违反 M3 audience §13, 弹幕是即时反应)",
+        "用时间邻域机制做评论↔评论跨用户关联 (违反 §5.3 故意不对齐, 时间邻域只用于弹幕↔字幕)",
+        "扩展到整片分析 (cross_source_alignment Focus 限定在指定时间窗)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "danmaku",
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 2
+    },
+    "semantic_criteria": [
+      {
+        "name": "时间邻域阈值",
+        "description": "是否用 < 5s 时间邻域对齐 (而非严格 1:1), 显式说明阈值",
+        "threshold": 0.7
+      },
+      {
+        "name": "机制不混用",
+        "description": "弹幕↔字幕用时间邻域 (§5.1), 不混评论↔评论故意不对齐 (§5.3)",
+        "threshold": 0.8
+      },
+      {
+        "name": "范围不扩散",
+        "description": "是否限定在指定时间窗, 不扩展到整片 (cross_source_alignment Focus 边界)",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "cross-intent-content-visual",
+    "category": "cross_intent_content_visual",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "这个视频讲什么 + PPT 排版有什么特点？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 subtitle (ASR fallback) 拿作者内容",
+        "调 frames (interval 或 scene) 拿视觉证据",
+        "两段可以是结构化分段也可以是按问题组织, 服从用户原始问题",
+        "可以跨域交叉解释: '作者在 X 时间点说 Y,Frame 12:34 显示 UI 状态是 Z, 两者互相印证'"
+      ],
+      "forbidden_behaviors": [
+        "把 visual 推断当 subtitle 文字事实 (语义身份偷换)",
+        "把 subtitle 推断当 visual 观察事实 (语义身份偷换)",
+        "只调 1 个 Tool 假装协同",
+        "user-facing finalAnswer 出现 '来自 content_learn §X' / '来自 visual_decode §Y' 内部协议出处"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle",
+        "frames"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "danmaku",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 4,
+      "minTimeRangeReferences": 1
+    },
+    "semantic_criteria": [
+      {
+        "name": "跨 Intent 数据共享不偷换",
+        "description": "可以跨域引用同一证据 (作者说 + Frame 显示), 但不能把视觉推断当文字事实",
+        "threshold": 0.7
+      },
+      {
+        "name": "跨域交叉解释",
+        "description": "允许'作者说 X,Frame 显示 UI 状态是 Y, 两者互相印证/对比' 这种交叉解释",
+        "threshold": 0.6
+      },
+      {
+        "name": "Grounding 完整",
+        "description": "subtitle 引用带字幕时间戳, frames 引用带 Fxx @ mm:ss, 各自引证据",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "cross-intent-content-audience",
+    "category": "cross_intent_content_audience",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "这个视频讲什么 + 观众怎么看？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 subtitle 拿作者内容",
+        "调 comments 拿观众反馈 (按 sort=3 hot 头部 + 1-2 replies)",
+        "观众反馈段可以引用作者内容作为上下文锚点 (D12 允许)",
+        "矛盾点显式: 作者说 X, 观众误解成 Y / 反驳 X / 支持 X 都要分清"
+      ],
+      "forbidden_behaviors": [
+        "把作者观点当观众观点 (语义身份偷换)",
+        "把观众反馈当作者意图 (语义身份偷换)",
+        "user-facing finalAnswer 出现内部协议出处标注"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle",
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "frames",
+        "danmaku",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 1
+    },
+    "semantic_criteria": [
+      {
+        "name": "作者观众分离",
+        "description": "作者观点归 content 段, 观众反馈归 audience 段, 不混",
+        "threshold": 0.7
+      },
+      {
+        "name": "观众反馈可引作者作锚点",
+        "description": "观众反馈段可以引用作者内容作上下文锚点, 不算串味",
+        "threshold": 0.6
+      },
+      {
+        "name": "矛盾点显式",
+        "description": "作者 vs 观众矛盾时显式标注, 标清是支持/反驳/误解哪种关系",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "cross-intent-content-market",
+    "category": "cross_intent_content_market",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "视频里讲的产品 + 观众付费意愿怎么样？市场成立吗？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 subtitle 拿作者方案 (market_research §12.2 协同, 作者方案作锚点)",
+        "调 comments 找 Purchase Intent / Objection / Workaround 显式信号 (按 market_research §4 识别)",
+        "D17 严格: 单视频拒绝'市场已验证 / 值得做 / 创业机会'",
+        "列待验证缺口 (跨视频 V2 / 用户访谈 / 真实购买数据)"
+      ],
+      "forbidden_behaviors": [
+        "写'市场已验证 / 值得做 / 创业机会' (D17 硬边界)",
+        "把作者方案当用户需求 (语义身份偷换, 作者方案 ≠ 用户痛点)",
+        "把观众反馈当购买行为 (D17 表达 vs 行为边界, market_research §10)",
+        "跳过 D17 边界检查",
+        "user-facing finalAnswer 出现内部协议出处标注"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle",
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "frames",
+        "danmaku",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 1
+    },
+    "semantic_criteria": [
+      {
+        "name": "作者方案锚点",
+        "description": "作者方案从 subtitle 拿, market 段引用作锚点 (§12.2 协同)",
+        "threshold": 0.7
+      },
+      {
+        "name": "Purchase Intent 区分",
+        "description": "区分 Purchase Intent / Objection / Action Intent, 不混",
+        "threshold": 0.7
+      },
+      {
+        "name": "D17 严格执行",
+        "description": "拒绝'市场已验证'强结论, 列待验证项替代",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "id": "cross-intent-four-ultimate",
+    "category": "cross_intent_four_ultimate",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "这个视频讲什么 + 画面 + 观众 + 市场，全面分析下？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 subtitle 拿内容 (content + market 作者方案锚点)",
+        "调 frames 拿视觉 (visual)",
+        "调 comments 拿观众 + 商业信号 (audience + market)",
+        "4 维度按用户问题覆盖 (不必平铺 4 段, 服从用户原始问题结构)",
+        "D17 严格: market 段拒绝'市场已验证'"
+      ],
+      "forbidden_behaviors": [
+        "任何维度数据挪到另一维度的语义身份 (作者 ≠ 观众 ≠ 视觉 ≠ 市场信号)",
+        "D17 边界执行不严 (market 段必须跟单 Intent market_research case 同标准)",
+        "市场段写成强结论",
+        "user-facing finalAnswer 出现内部协议出处标注"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle",
+        "frames",
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 5,
+      "minTimeRangeReferences": 2
+    },
+    "semantic_criteria": [
+      {
+        "name": "4 维度按用户覆盖",
+        "description": "4 维度按用户问题覆盖, 允许整合呈现, 不强制平铺 4 段",
+        "threshold": 0.7
+      },
+      {
+        "name": "语义身份不混",
+        "description": "作者/观众/视觉/市场 4 维度数据语义身份不混, 可引用但不偷换",
+        "threshold": 0.7
+      },
+      {
+        "name": "D17 终极执行",
+        "description": "market 段拒绝'市场已验证', 跟单 Intent market_research case 同标准",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "id": "cross-intent-one-source-failed",
+    "category": "cross_intent_one_source_failed",
+    "execution": "fixture_result",
+    "user_request": "这个视频讲什么 + 观众怎么看？{{video}}",
+    "tool_outcome": "success_partial",
+    "expected": {
+      "required_actions": [
+        "调 subtitle 拿作者内容 (content Required, success)",
+        "调 comments 拿观众反馈 (audience Required, failed: reasonCode=comments_api_unreachable)",
+        "content 段正常完成: 时间锚定 + 作者方案 + 内容类型, 跟单 Intent content-summary 同标准",
+        "audience 段 Capability Gap 显式: 声明 comments Tool 失败, 不假装有观众观点",
+        "不拿 transcript 段推观众看法 (D12 边界, 跨协议数据挪用)",
+        "单源失败不拖垮整体 (M6 §2.1): 整体降级为 partial, 不是 failed"
+      ],
+      "forbidden_behaviors": [
+        "拿 subtitle 段推'观众关注点 / 观众态度' (D12 边界, 跨协议数据挪用)",
+        "写'观众认为 / 观众反馈 / 主流声音' (无评论数据, 不编造)",
+        "因为 comments 失败而让 content 段不写或整项回答失败 (违反 M6 §2.1)",
+        "省略 audience 段 Capability Gap 声明",
+        "不区分 'Tool 失败' 跟 '内容不存在' (Tool 失败是工程问题, 不是数据问题)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle",
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "frames",
+        "danmaku",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 1,
+      "mustDeclareCapabilityGap": [
+        "观众观点不可获取",
+        "评论 Tool 失败",
+        "audience 维度受限"
+      ]
+    },
+    "semantic_criteria": [
+      {
+        "name": "content 段独立完整",
+        "description": "content 段正常完成 (时间锚定 + 作者方案 + 内容类型), 跟单 Intent content-summary 同标准, 不被 comments 失败影响",
+        "threshold": 0.8
+      },
+      {
+        "name": "audience Capability Gap 显式",
+        "description": "audience 段显式声明 comments Tool 失败, 不基于 subtitle 编造观众观点",
+        "threshold": 0.9
+      },
+      {
+        "name": "D12 跨协议边界",
+        "description": "不拿 transcript 段推观众看法, 跨协议数据挪用在 D12 边界禁止",
+        "threshold": 0.9
+      },
+      {
+        "name": "单源失败不拖垮整体",
+        "description": "整体降级为 partial (content 完整 + audience Capability Gap), 不是 failed (M6 §2.1)",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "id": "degrade-subtitle-failure",
+    "category": "degrade_subtitle_failure",
+    "execution": "fixture_result",
+    "user_request": "这个视频讲什么？{{video}}",
+    "tool_outcome": "failed",
+    "expected": {
+      "required_actions": [
+        "字幕 Tool 真实返回: outcome=missing, acquisition.status=failed, reasonCode=asr_python_not_found (无官方字幕 + ASR Python 不可用, D14 fallback 链两段都失败)",
+        "Agent 显式声明字幕不可用, 不假装有内容",
+        "不基于视频标题 / 简介编造内容",
+        "Capability Gap 显式 (M6 §3.1 主动停止条件)"
+      ],
+      "forbidden_behaviors": [
+        "假装字幕可用",
+        "基于视频元数据 (标题/简介) 编造'内容'",
+        "把 fixture 失败当 Tool 成功",
+        "省略 Capability Gap 声明"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 2,
+      "minTimeRangeReferences": 0,
+      "mustDeclareCapabilityGap": [
+        "字幕不可用",
+        "ASR 不可用",
+        "无字幕可获取",
+        "内容学习受限"
+      ]
+    },
+    "semantic_criteria": [
+      {
+        "name": "Capability Gap 显式",
+        "description": "final_answer 显式声明字幕/ASR 不可用, 不编造内容",
+        "threshold": 0.9
+      },
+      {
+        "name": "不基于元数据编造",
+        "description": "没有调用 metadata 编造'视频讲什么'",
+        "threshold": 0.9
+      },
+      {
+        "name": "降级路径透明",
+        "description": "reasonCode 显式 (asr_python_not_found) — M4.1 P2-4 audit 后的真实 reasonCode, 旧 fixture 写的 asr_unavailable / no_official_subtitle 已删除",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "id": "degrade-danmaku-empty",
+    "category": "degrade_danmaku_empty",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "user_request": "弹幕对作者讲的内容有什么反应？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 danmaku 拿样本 (历史视频, B 站匿名访问弹幕接口返 0 条 — M6.2 SF-5: status=success + total=0 是 Empty 不是 Partial)",
+        "调 subtitle 拿作者方案锚点 (但本 case subtitle ASR 也失败, 跨源时间邻域无法做)",
+        "显式区分 Empty (danmaku) vs Partial (subtitle ASR 失败 → 整体跨源对齐降级)",
+        "拒绝'弹幕密度峰值在 X 时间点'类无数据结论"
+      ],
+      "forbidden_behaviors": [
+        "假装弹幕数据可用",
+        "基于 subtitle 段推弹幕密度",
+        "写'弹幕对作者内容反应平淡' (0 数据 ≠ 平淡, 违反 Empty/Partial 区分)",
+        "跨协议数据挪用 (subtitle 段挪到弹幕结论)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "danmaku",
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 1
+    },
+    "semantic_criteria": [
+      {
+        "name": "Empty vs Partial 区分",
+        "description": "danmaku 0 条 = success+total=0 (Empty, M6.2 SF-5), 不是 partial+empty_segments (该 reasonCode 已在 M4.1 P2-4 audit 中删除)",
+        "threshold": 0.9
+      },
+      {
+        "name": "不编造密度结论",
+        "description": "没有基于 0 弹幕写'反应平淡'或'反应强烈'",
+        "threshold": 0.9
+      },
+      {
+        "name": "Capability Gap 一致",
+        "description": "跟 M4 cross-source-alignment 演示同根因, 显式说明",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "stop-insufficient-coverage",
+    "category": "stop_insufficient_coverage",
+    "execution": "fixture_result",
+    "user_request": "这个视频证明 XX 产品市场成立吗？{{video}}",
+    "tool_outcome": "success_partial",
+    "expected": {
+      "required_actions": [
+        "调 comments 但 sample < 10 条 (fixture 模拟小评论区, commentsCount=5, totalReported=8, complete=true)",
+        "显式分离 Data Coverage (采集完整度, complete=true 已翻完) 跟 Evidence Sufficiency (证据强度, 5 条 < 10 不构成代表)",
+        "D17 严格执行: 单视频不证明'市场已验证 / 值得做' (D17 是研究层级边界, 跟样本规模无关, 始终生效)",
+        "列两层缺口: D17 缺口 (跨视频 / 跨平台 / 真实购买 / 市场规模) + 样本规模缺口 (替代品 / 用户访谈 / 扩样本)",
+        "不写'5/8 = 100%' 这种把采样比跟覆盖率混为一谈的错误数学 (5/8 = 62.5% 是采样比, complete=true 才是采集覆盖率 100%)"
+      ],
+      "forbidden_behaviors": [
+        "写'市场已验证 / 值得做 / 创业机会' (违反 D17 研究层级边界)",
+        "用 < 10 条样本写'普遍认为 / 大部分用户' (违反样本规模边界)",
+        "跳过 D17 边界检查 (D17 跟样本规模分开, 但都要执行)",
+        "把 Data Coverage 跟 Evidence Sufficiency 混为一谈 (Coverage 完整 ≠ Evidence 充分)",
+        "写'5/8 = 100%' (数学错误, 实际 5/8 = 62.5%, 描述的是采样比不是覆盖率)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "subtitle",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 2,
+      "minTimeRangeReferences": 0,
+      "mustDeclareCapabilityGap": [
+        "样本不足",
+        "市场验证受限",
+        "数据无法支持结论"
+      ]
+    },
+    "semantic_criteria": [
+      {
+        "name": "Coverage 跟 Sufficiency 分离",
+        "description": "显式声明 Data Coverage 完整 (complete=true) 跟 Evidence Sufficiency 不足 (5 条 < 10) 是两个不同维度, 不混",
+        "threshold": 0.9
+      },
+      {
+        "name": "D17 主动停止",
+        "description": "显式拒绝'市场已验证' (D17 研究层级边界, 跟样本规模无关, 始终生效), 列待验证项",
+        "threshold": 0.9
+      },
+      {
+        "name": "样本规模边界显式",
+        "description": "5 条样本显式声明, 不写'普遍', 跟 D17 缺口分开列 (样本规模 < 10 ≠ D17 硬边界)",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "id": "market-generic-purchase-intent-positive",
+    "category": "market_generic_purchase_intent",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1zcrGBvEfD",
+    "user_request": "B 站观众对无线麦克风愿意付费吗？什么样的产品？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 comments Tool hot (sort=3) + time (sort=2) 双 sample, 按 rpid dedupe",
+        "识别 Purchase Intent / Objection / Action Intent 显式信号, 每条带 rpid",
+        "区分'愿意买' / '不愿意买' / '试用/推荐' 三个角色, 不混",
+        "表达强度量化 (N 条 / like 总数 / 占比)"
+      ],
+      "forbidden_behaviors": [
+        "只调一个 sort, 不 dedupe (违反 P0-4 薄 deterministic preprocessing)",
+        "用 '20/总样本 = X%' 写百分比 (违反 P0-5 totalReported 语义)",
+        "把 '测评视频里推荐' 当 Purchase Intent (推荐不等于付费)",
+        "写 '用户愿意付费' 强结论 (违反 D17)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "subtitle",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 4,
+      "minTimeRangeReferences": 0
+    },
+    "semantic_criteria": [
+      {
+        "name": "双 sample + dedupe",
+        "description": "调 hot + time 两次, 按 rpid 去重, 跟 M4.1 P0-4 dedupe.ts 配套",
+        "threshold": 0.7
+      },
+      {
+        "name": "三角色分离",
+        "description": "Purchase Intent / Objection / Action Intent 不混, 各带 rpid 列表",
+        "threshold": 0.7
+      },
+      {
+        "name": "D17 严格执行",
+        "description": "拒绝'用户愿意付费'强结论, 列待验证项",
+        "threshold": 0.9
+      }
+    ]
+  },
+  {
+    "id": "market-latest-purchase-intent-positive",
+    "category": "market_latest_purchase_intent",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV14z6GB1EAr",
+    "user_request": "最近大家愿不愿意为 AI 编程工具付费？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 comments Tool sort=2 time Required (M4.1 P1-1 latest 拆分)",
+        "识别最新 Purchase Intent 显式信号",
+        "对比 generic 跟 latest 的不同: latest 限定'最近一段时间', 不宣称全局购买意愿"
+      ],
+      "forbidden_behaviors": [
+        "用 sort=3 hot 当默认 (latest 限定 time)",
+        "把 latest sample 当全样本购买意愿"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "subtitle",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 2,
+      "minTimeRangeReferences": 0
+    },
+    "semantic_criteria": [
+      {
+        "name": "sort=2 选对",
+        "description": "latest 限定 time sort, 不混 hot",
+        "threshold": 0.7
+      },
+      {
+        "name": "范围限定",
+        "description": "明示'最近一段时间' 范围, 不写 '全样本购买意愿'",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "market-realtime-reaction-alignment-positive",
+    "category": "market_realtime_reaction_alignment",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1zcrGBvEfD",
+    "user_request": "弹幕对作者测评 10 款麦克风有什么即时反应？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 subtitle (作者测评内容) + danmaku (观众反应) 跨源",
+        "用 §5.1 时间邻域对齐 (5s 阈值)",
+        "弹幕 progress 跟字幕 startSeconds 共享时间轴"
+      ],
+      "forbidden_behaviors": [
+        "把弹幕 progress 严格 1:1 对齐 (违反 §5.1 5s 阈值)",
+        "把弹幕当稳定评价 (违反 M3 §13 弹幕是即时反应)",
+        "用 §5.2 语义对齐 (本 Focus 用 §5.1)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "danmaku",
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 0
+    },
+    "semantic_criteria": [
+      {
+        "name": "§5.1 时间邻域",
+        "description": "用 < 5s 阈值, 不混 §5.2 语义对齐",
+        "threshold": 0.7
+      },
+      {
+        "name": "范围不扩散",
+        "description": "限定在指定时间窗, 不扩散到全片",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "market-creator-feedback-alignment-positive",
+    "category": "market_creator_feedback_alignment",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV14z6GB1EAr",
+    "user_request": "B 站观众对 Clawdbot 这类 AI 员工工具有什么反馈？跟作者方案比？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 subtitle (作者方案) + comments (观众反馈) 跨源",
+        "用 §5.2 语义对齐 (产品名 'Clawdbot' / 'token' / 替代品 'cursor/codex' 引用)",
+        "作者方案 vs 观众反馈对照 (D12 跨协议)"
+      ],
+      "forbidden_behaviors": [
+        "用 §5.1 时间邻域对齐 (本 Focus 用 §5.2)",
+        "把作者方案挪到观众反馈结论",
+        "把观众反馈挪到作者方案结论"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle",
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "minTimeRangeReferences": 1
+    },
+    "semantic_criteria": [
+      {
+        "name": "§5.2 语义对齐",
+        "description": "用产品名 / 替代品引用, 不混 §5.1 时间邻域",
+        "threshold": 0.7
+      },
+      {
+        "name": "作者方案 vs 观众反馈对照",
+        "description": "D12 跨协议, 双方独立结论不混",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "market-full-cross-source-positive",
+    "category": "market_full_cross_source",
+    "execution": "real_video",
+    "sample_video": "https://www.bilibili.com/video/BV1zcrGBvEfD",
+    "user_request": "综合弹幕 + 评论 + 字幕, 麦克风测评的市场反应怎么样？{{video}}",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 subtitle + danmaku + comments 全部 3 源 (M4.1 P1-3 full_cross_source)",
+        "§5.1 时间邻域对齐弹幕 ↔ 字幕 + §5.2 语义对齐评论 ↔ 字幕",
+        "三种对齐机制不混"
+      ],
+      "forbidden_behaviors": [
+        "只调 2 源, 假装全 source",
+        "把 §5.1 §5.2 §5.3 混用",
+        "全 source 跟 sample 太短 (< 1 分钟)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "subtitle",
+        "danmaku",
+        "comments"
+      ],
+      "mustNotCallTools": [
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 4,
+      "minTimeRangeReferences": 0
+    },
+    "semantic_criteria": [
+      {
+        "name": "3 源全调",
+        "description": "subtitle + danmaku + comments 三个 Tool 都调",
+        "threshold": 0.8
+      },
+      {
+        "name": "机制不混",
+        "description": "§5.1 + §5.2 分别使用, 不混",
+        "threshold": 0.7
+      }
+    ]
+  }
+]

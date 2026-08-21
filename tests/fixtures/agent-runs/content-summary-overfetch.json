@@ -1,0 +1,25 @@
+{
+  "caseId": "content-summary",
+  "category": "content_summary",
+  "prompt": "帮我把这个视频讲明白。https://www.bilibili.com/video/BV1iQQYB7EpN?p=4",
+  "skillVersion": "0.6.0",
+  "toolTrace": [
+    {
+      "tool": "subtitle",
+      "input": { "video": "BV1iQQYB7EpN" },
+      "output": {},
+      "outcome": "success",
+      "calledAt": "2026-08-17T22:00:00+08:00"
+    },
+    {
+      "tool": "comments",
+      "input": { "video": "BV1iQQYB7EpN" },
+      "output": {},
+      "outcome": "success",
+      "calledAt": "2026-08-17T22:00:05+08:00"
+    }
+  ],
+  "finalAnswer": "作者讲了……",
+  "recordedAt": "2026-08-17T22:00:30+08:00",
+  "notes": "故意构造的 over-fetch fixture：content_summary 不应调用 comments"
+}

@@ -1,0 +1,18 @@
+{
+  "caseId": "subtitle-missing",
+  "category": "subtitle_missing",
+  "prompt": "帮我提炼这个视频最值得学习的内容。https://www.bilibili.com/video/BV15wGR6CEhY",
+  "skillVersion": "0.6.0",
+  "toolTrace": [
+    {
+      "tool": "subtitle",
+      "input": { "video": "BV15wGR6CEhY" },
+      "output": { "reasonCode": "no_subtitle" },
+      "outcome": "missing",
+      "calledAt": "2026-08-17T22:00:00+08:00"
+    }
+  ],
+  "finalAnswer": "作者的核心观点是：……，主要依据是……，视频总结一下讲了……",
+  "recordedAt": "2026-08-17T22:00:30+08:00",
+  "notes": "故意构造的失败 fixture：missing 时 final_answer 不应含具体观点"
+}

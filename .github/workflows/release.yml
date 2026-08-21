@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: 验证、打包并发布
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: 检出标签源码
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 准备 Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 检查版本一致性
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_tag_version="${GITHUB_REF_NAME#v}"
+          package_version="$(node -p "require('./package.json').version")"
+          version_file_value="$(tr -d '[:space:]' < VERSION)"
+
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "版本标签格式无效: $GITHUB_REF_NAME"
+            exit 1
+          fi
+
+          if [[ "$release_tag_version" != "$package_version" || "$release_tag_version" != "$version_file_value" ]]; then
+            echo "版本不一致: tag=$release_tag_version package.json=$package_version VERSION=$version_file_value"
+            exit 1
+          fi
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: 离线单元测试
+        run: npm test
+
+      - name: 发布物验收
+        run: npm run test:release
+
+      - name: 生成正式发布目录
+        run: npm run release
+
+      - name: 生成压缩包和校验文件
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_tag_version="${GITHUB_REF_NAME#v}"
+          mkdir -p release-assets
+          (
+            cd release
+            zip -qr "../release-assets/bilibili-video-analysis-${release_tag_version}.zip" bilibili-video-analysis
+            tar -czf "../release-assets/bilibili-video-analysis-${release_tag_version}.tar.gz" bilibili-video-analysis
+          )
+          (
+            cd release-assets
+            sha256sum bilibili-video-analysis-* > SHA256SUMS
+          )
+
+      - name: 创建 GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            release-assets/bilibili-video-analysis-*.zip \
+            release-assets/bilibili-video-analysis-*.tar.gz \
+            release-assets/SHA256SUMS \
+            --verify-tag \
+            --generate-notes \
+            --title "$GITHUB_REF_NAME"

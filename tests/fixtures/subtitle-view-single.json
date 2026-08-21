@@ -1,0 +1,16 @@
+{
+  "lan": "zh-CN",
+  "lanDoc": "中文（中国）",
+  "subtitles": [
+    {
+      "id": "9007199254740993",
+      "lan": "zh-CN",
+      "lanDoc": "中文（中国）",
+      "lanDocBrief": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/subtitle/example-zh.json",
+      "type": 0,
+      "aiStatus": 0,
+      "format": 0
+    }
+  ]
+}

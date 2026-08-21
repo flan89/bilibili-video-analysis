@@ -1,0 +1,14 @@
+[
+  {
+    "tag_id": 1,
+    "tag_name": "AI"
+  },
+  {
+    "tag_id": 2,
+    "tag_name": "Agent"
+  },
+  {
+    "tag_id": 3,
+    "tag_name": "编程工具"
+  }
+]

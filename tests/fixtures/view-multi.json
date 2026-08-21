@@ -1,0 +1,45 @@
+{
+  "bvid": "BV1TESTMULTIP",
+  "aid": 999000111,
+  "cid": 81001,
+  "title": "多P测试视频",
+  "desc": "多P fixture",
+  "pic": "https://i0.hdslb.com/bfs/archive/multi.jpg",
+  "pubdate": 1700000000,
+  "ctime": 1699999900,
+  "duration": 900,
+  "tid": 17,
+  "tname": "单机游戏",
+  "copyright": 1,
+  "videos": 2,
+  "owner": {
+    "mid": 42,
+    "name": "多P作者",
+    "face": "https://i0.hdslb.com/bfs/face/multi.jpg"
+  },
+  "stat": {
+    "view": 5000,
+    "danmaku": 20,
+    "reply": 10,
+    "favorite": 50,
+    "coin": 30,
+    "share": 5,
+    "like": 200
+  },
+  "pages": [
+    {
+      "cid": 81001,
+      "page": 1,
+      "from": "vupload",
+      "part": "第一部分",
+      "duration": 400
+    },
+    {
+      "cid": 81002,
+      "page": 2,
+      "from": "vupload",
+      "part": "第二部分",
+      "duration": 500
+    }
+  ]
+}

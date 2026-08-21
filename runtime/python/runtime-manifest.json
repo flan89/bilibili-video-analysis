@@ -1,0 +1,17 @@
+{
+  "runtimeManifestVersion": 1,
+  "asrEnvironmentVersion": 1,
+  "pythonMin": "3.9",
+  "models": [
+    {
+      "key": "fsmnVad",
+      "id": "iic/speech_fsmn_vad_zh-cn-16k-common-pytorch",
+      "revision": "v2.0.4"
+    },
+    {
+      "key": "senseVoice",
+      "id": "iic/SenseVoiceSmall",
+      "revision": "7bf452403abd7353a300cd760f7adae7701c92c1"
+    }
+  ]
+}

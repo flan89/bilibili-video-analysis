@@ -1,0 +1,45 @@
+# runtime/python/requirements.lock
+#
+# V1 ASR 依赖锁版本. 跟用户实际跑通 (2026-08-20 在 macOS arm64 + Python 3.12
+# 验证) 的组合一致. setup asr 时按这个文件装, 保证 "V1 发布时验证过什么
+# 组合, 用户就装什么组合".
+#
+# 设计:
+# - 顶层依赖: funasr / modelscope / torch 等 (由 funasr 自己解间接依赖)
+# - 不写完整 pip freeze (间接依赖 50+ 行, 每次 funasr 升级 lock 全变)
+# - V1.x → V1.y 升级时, 这个文件要手动 bump, 跟 asrEnvironmentVersion 配合
+#
+# 不在 lock 但 ASR 用到的 (依赖 funasr / modelscope 自带):
+#   numpy, librosa, soundfile, hydra-core, omegaconf, tokenizers,
+#   huggingface_hub, kaldiio, soxr, torchaudio, torch-complex
+#
+# 加新依赖前先 review: 是否必要, 是否 funasr 自带, 装 / 升级风险.
+# 不要盲目 "pip install 一下试试", V1 锁版本原则就是稳定优先.
+
+# 主依赖: FunASR VAD + ASR pipeline
+funasr==1.4.2
+
+# ModelScope 模型源 (fsmn-vad / SenseVoiceSmall 下载源)
+modelscope==1.39.1
+
+# PyTorch 运行时
+torch==2.13.0
+
+# 音频 I/O (funasr AudioDataset 间接用到)
+numpy==2.5.2
+librosa==1.0.0
+soundfile==0.14.0
+
+# 数据结构
+hydra-core==1.3.5
+omegaconf==2.3.1
+
+# protobuf 序列化
+protobuf==7.35.1
+
+# 模型加载
+huggingface_hub==1.27.0
+tokenizers==0.22.2
+
+# Tokenizer
+regex==2026.7.19

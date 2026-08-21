@@ -1,0 +1,25 @@
+{
+  "font_size": 0.4,
+  "font_color": "#FFFFFF",
+  "background_alpha": 0.5,
+  "body": [
+    {
+      "from": 0.5,
+      "to": 2.3,
+      "location": 2,
+      "content": "大家好，今天介绍这个方法。"
+    },
+    {
+      "from": 2.3,
+      "to": 5.8,
+      "location": 2,
+      "content": "第一步先准备输入数据。"
+    },
+    {
+      "from": 5.8,
+      "to": 8.2,
+      "location": 2,
+      "content": "然后检查最终结果。"
+    }
+  ]
+}

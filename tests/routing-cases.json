@@ -1,0 +1,1295 @@
+[
+  {
+    "id": 1,
+    "user_request": "这个视频比较长，帮我把里面真正有价值的知识拆出来，废话和铺垫可以忽略。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "核心观点",
+        "高价值知识点",
+        "过滤铺垫"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "video",
+        "danmaku",
+        "comments",
+        "replies"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "user_request": "帮我把这个视频讲明白，我主要想知道作者最终得出了什么结论，以及他为什么这么判断。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "结论",
+        "论证结构",
+        "证据/理由"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "video",
+        "comments",
+        "replies"
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "user_request": "这是个教程视频，帮我整理成我可以照着操作的步骤。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "教程步骤",
+        "流程"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies",
+        "danmaku"
+      ]
+    }
+  },
+  {
+    "id": 4,
+    "user_request": "我已经大概知道这个视频讲什么了，重点帮我研究一下里面关于 Agent Skill 设计的部分。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "Agent Skill",
+        "方法",
+        "设计原则"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "video",
+        "comments",
+        "replies"
+      ]
+    }
+  },
+  {
+    "id": 5,
+    "user_request": "帮我看看这个视频里面有哪些观点值得记下来，哪些只是作者随口说的。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "核心主张",
+        "主张强度",
+        "证据质量"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies"
+      ]
+    }
+  },
+  {
+    "id": 6,
+    "user_request": "把视频里提到的方法、工具和案例分别整理出来，我后面可能会实际尝试。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "方法",
+        "工具",
+        "案例",
+        "可执行事项"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies",
+        "danmaku"
+      ]
+    }
+  },
+  {
+    "id": 7,
+    "user_request": "这个内容有点专业，我没完全听懂，帮我把几个关键概念之间的关系捋清楚。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "关键概念",
+        "概念关系"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "video",
+        "comments",
+        "replies"
+      ]
+    }
+  },
+  {
+    "id": 8,
+    "user_request": "不用简单总结，我想真正学会这个视频里的东西，帮我按照“问题—方法—案例—结论”拆一下。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "问题",
+        "方法",
+        "案例",
+        "结论"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies"
+      ]
+    }
+  },
+  {
+    "id": 9,
+    "user_request": "这个 UP 主讲得比较散，帮我重新组织成一个更清晰的知识结构。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "知识结构",
+        "层次",
+        "综合"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "video",
+        "comments",
+        "replies"
+      ]
+    }
+  },
+  {
+    "id": 10,
+    "user_request": "看看这个视频有没有什么我以前可能不知道、但对做 Agent 很有价值的知识点。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "对 Agent 有价值",
+        "潜在非显而易见知识"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "personal_long_term_memory",
+        "comments",
+        "replies"
+      ],
+      "acceptance_note": "不要判断用户个人是否已知；缩窄为视频内相对主题的新颖/高价值内容。"
+    }
+  },
+  {
+    "id": 11,
+    "user_request": "这个视频整体看起来很舒服，但我说不出来为什么，帮我从画面设计上拆一下。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "画面设计",
+        "构图",
+        "布局",
+        "视觉节奏"
+      ],
+      "must_require": [
+        "metadata",
+        "frames"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies",
+        "danmaku"
+      ]
+    }
+  },
+  {
+    "id": 12,
+    "user_request": "我挺喜欢他的 PPT 风格，重点分析排版、字体、配图和信息层级。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "PPT",
+        "排版",
+        "字体",
+        "配图",
+        "信息层级"
+      ],
+      "must_require": [
+        "metadata",
+        "frames"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies"
+      ]
+    }
+  },
+  {
+    "id": 13,
+    "user_request": "这个视频明明二十多分钟，但看起来一点都不累，帮我研究一下他的剪辑节奏。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "剪辑节奏",
+        "镜头切换",
+        "信息密度"
+      ],
+      "must_require": [
+        "metadata",
+        "video",
+        "timeline"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies"
+      ],
+      "capability_gap": [
+        "video",
+        "timeline"
+      ]
+    }
+  },
+  {
+    "id": 14,
+    "user_request": "帮我看看他大概多久切一次画面，什么时候用录屏、什么时候用图片或者 B-roll。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "切画面频率",
+        "录屏",
+        "图片",
+        "B-roll"
+      ],
+      "must_require": [
+        "metadata",
+        "video",
+        "timeline"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies"
+      ],
+      "capability_gap": [
+        "video",
+        "timeline"
+      ]
+    }
+  },
+  {
+    "id": 15,
+    "user_request": "这个 UP 主的字幕做得挺舒服，看看字体、位置、出现频率以及字幕和画面的配合。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "字幕视觉样式",
+        "字体",
+        "位置",
+        "出现频率",
+        "画面配合"
+      ],
+      "must_require": [
+        "metadata",
+        "video",
+        "frames"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies"
+      ],
+      "capability_gap": [
+        "video"
+      ]
+    }
+  },
+  {
+    "id": 16,
+    "user_request": "我想模仿这种知识类视频的制作方式，帮我拆一下它从开头到结尾的视觉结构。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "视觉结构",
+        "场景序列",
+        "呈现方式"
+      ],
+      "must_require": [
+        "metadata",
+        "video",
+        "timeline",
+        "frames"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies"
+      ],
+      "capability_gap": [
+        "video",
+        "timeline"
+      ]
+    }
+  },
+  {
+    "id": 17,
+    "user_request": "这个视频的封面我觉得点击欲挺强的，帮我看看它到底用了哪些设计手法。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "quick",
+      "focus_semantics": [
+        "封面",
+        "点击设计",
+        "构图",
+        "字体"
+      ],
+      "must_require": [
+        "metadata",
+        "cover"
+      ],
+      "must_not_default": [
+        "video",
+        "transcript",
+        "comments",
+        "replies"
+      ],
+      "capability_gap": [
+        "cover"
+      ]
+    }
+  },
+  {
+    "id": 18,
+    "user_request": "帮我分析一下这个视频为什么看起来比较“高级”，主要从构图、留白、配色、字体这些方面看。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "构图",
+        "留白",
+        "配色",
+        "字体"
+      ],
+      "must_require": [
+        "metadata",
+        "frames"
+      ],
+      "must_not_default": [
+        "video",
+        "comments",
+        "replies"
+      ]
+    }
+  },
+  {
+    "id": 19,
+    "user_request": "我想学习他这种录屏教程怎么做得不枯燥，看看他用了哪些画面变化手段。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "录屏",
+        "画面变化",
+        "剪辑节奏"
+      ],
+      "must_require": [
+        "metadata",
+        "video",
+        "timeline",
+        "frames"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies"
+      ],
+      "capability_gap": [
+        "video",
+        "timeline"
+      ]
+    }
+  },
+  {
+    "id": 20,
+    "user_request": "重点帮我研究视频节奏，不只是剪辑点，还包括说话节奏、停顿、画面切换和信息密度。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "剪辑节奏",
+        "说话节奏",
+        "停顿",
+        "画面切换",
+        "信息密度"
+      ],
+      "must_require": [
+        "metadata",
+        "video",
+        "timeline",
+        "transcript"
+      ],
+      "must_not_default": [
+        "comments",
+        "replies"
+      ],
+      "capability_gap": [
+        "video",
+        "timeline"
+      ]
+    }
+  },
+  {
+    "id": 21,
+    "user_request": "帮我看看这个视频评论区大家主要在讨论什么，不用管视频本身讲得怎么样。",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "讨论主题",
+        "话题聚类"
+      ],
+      "must_require": [
+        "metadata",
+        "comments"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 22,
+    "user_request": "这个视频好像争议挺大的，帮我把支持和反对的主要理由分别整理出来。",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "争议",
+        "支持理由",
+        "反对理由"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 23,
+    "user_request": "看看弹幕在哪几个时间点反应最强，以及当时视频刚好讲了什么。",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "弹幕峰值",
+        "高互动时间点",
+        "上下文内容"
+      ],
+      "must_require": [
+        "metadata",
+        "danmaku",
+        "transcript"
+      ],
+      "must_not_default": [
+        "full_comments",
+        "full_replies"
+      ]
+    }
+  },
+  {
+    "id": 24,
+    "user_request": "评论区里大家有哪些普遍没听懂或者反复在问的问题？",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "困惑",
+        "重复问题",
+        "FAQ信号"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 25,
+    "user_request": "帮我看看观众到底认不认可 UP 主这个观点，别只看点赞最高的几条评论。",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "观点分布",
+        "共识",
+        "分歧",
+        "代表性抽样"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 26,
+    "user_request": "分析一下这个视频里哪些地方最容易让用户产生共鸣。",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "共鸣",
+        "高互动片段"
+      ],
+      "must_require": [
+        "metadata",
+        "danmaku",
+        "transcript"
+      ],
+      "must_not_default": [
+        "full_replies"
+      ]
+    }
+  },
+  {
+    "id": 27,
+    "user_request": "帮我看看评论和弹幕的反应是不是一致，有没有视频里大家都叫好、评论区却在吐槽的情况。",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "弹幕与评论差异",
+        "跨渠道一致性"
+      ],
+      "must_require": [
+        "metadata",
+        "danmaku",
+        "comments",
+        "transcript"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 28,
+    "user_request": "我想了解这个视频吸引来的都是什么样的人，他们关注的问题有什么共同特点。",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "需求/行为/关注点分群",
+        "共同问题",
+        "用户语言"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "demographic_inference",
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "只做窄目标画像，不推断缺乏证据的人口统计属性。"
+    }
+  },
+  {
+    "id": 29,
+    "user_request": "我感觉这个视频下面可能藏着一些真实需求，帮我重点挖一下评论区。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "痛点",
+        "未满足需求",
+        "需求信号"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 30,
+    "user_request": "看看大家在评论里有没有反复抱怨现有产品的某些问题。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "重复抱怨",
+        "产品缺口",
+        "痛点"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 31,
+    "user_request": "帮我找找有没有人明确说“有没有某某工具”“能不能实现某某功能”之类的需求。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "功能诉求",
+        "显式需求",
+        "未满足需求"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 32,
+    "user_request": "看看这些用户现在遇到问题时都是怎么解决的，有没有什么很麻烦的替代方案。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "替代方案",
+        "任务",
+        "场景",
+        "摩擦成本"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 33,
+    "user_request": "帮我判断这个评论区有没有值得进一步验证的产品机会，不要看到一句抱怨就当需求。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "机会假设",
+        "信号强度",
+        "未满足需求"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "输出值得进一步验证的机会假设，而不是宣称市场已成立。"
+    }
+  },
+  {
+    "id": 34,
+    "user_request": "看看有没有用户表现出比较强的付费意愿，比如问价格、哪里买、什么时候上线这种。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "购买/行动信号",
+        "价格/入口/上线询问"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "将付费相关表达分级为行为信号，不把询价等同真实支付。"
+    }
+  },
+  {
+    "id": 35,
+    "user_request": "我想做这个领域的产品，帮我看看用户最常提到哪些竞品，以及他们为什么喜欢或者讨厌这些竞品。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "竞品",
+        "替代品",
+        "喜欢/讨厌原因"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 36,
+    "user_request": "把这个评论区当成一次没有主持人的用户访谈，帮我提炼痛点、使用场景、现有解决办法和没满足的需求。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "痛点",
+        "使用场景",
+        "现有方案",
+        "未满足需求",
+        "用户原话"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ]
+    }
+  },
+  {
+    "id": 37,
+    "user_request": "这个视频感觉挺有东西的，帮我好好拆一下。",
+    "expected": {
+      "primary_intent": "overview",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "开放式概览",
+        "值得深挖方向"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "full_video",
+        "full_danmaku",
+        "full_replies",
+        "market_research"
+      ]
+    }
+  },
+  {
+    "id": 38,
+    "user_request": "这个视频不错，看看有什么值得我学习和借鉴的地方。",
+    "expected": {
+      "primary_intent": null,
+      "clarification_needed": true,
+      "depth": null,
+      "focus_semantics": [
+        "内容学习 vs 制作/剪辑借鉴"
+      ],
+      "must_require": [],
+      "must_not_default": [
+        "full_video",
+        "full_comments",
+        "market_research"
+      ],
+      "acceptance_note": "应先用一个简短问题确认主要想学内容还是制作方式；不要猜测后直接走重路径。"
+    }
+  },
+  {
+    "id": 39,
+    "user_request": "我最近在研究个人知识库，这个视频可能有参考价值，你帮我看看。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "与个人知识库主题的相关性",
+        "有用观点",
+        "方法"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "market_research",
+        "full_comments",
+        "full_replies"
+      ],
+      "acceptance_note": "没有明确市场信号时不要主动升级为 market_research。"
+    }
+  },
+  {
+    "id": 40,
+    "user_request": "这个视频突然火了，帮我分析一下它为什么火，以及这里面有没有什么值得关注的机会。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "走红原因假设",
+        "受众反应",
+        "内容钩子",
+        "机会信号"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript",
+        "comments",
+        "replies",
+        "danmaku"
+      ],
+      "must_not_default": [],
+      "acceptance_note": "只能形成单视频证据支持的假设；跨视频/趋势验证属于后续能力。"
+    }
+  },
+  {
+    "id": 41,
+    "user_request": "重点帮我分析这个视频的剪辑节奏：大概多久切一次画面，什么时候用录屏、什么时候用图片或者 B-roll。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "剪辑节奏",
+        "镜头切换",
+        "录屏",
+        "B-roll"
+      ],
+      "must_require": [
+        "metadata",
+        "video",
+        "timeline"
+      ],
+      "must_not_default": [
+        "transcript",
+        "comments",
+        "replies"
+      ],
+      "capability_gap": [
+        "video",
+        "timeline"
+      ],
+      "acceptance_note": "Task Routing 必须正确识别为 visual_decode，Data Plan 不能因为当前仅字幕能力而改写为 content_learn；应明确说明视觉 Tool 尚未实现并保持原始 Intent 路由。"
+    }
+  },
+  {
+    "id": 42,
+    "user_request": "这个视频争议挺大，帮我把评论区支持和反对双方的主要理由分别整理出来。",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "争议",
+        "支持理由",
+        "反对理由"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "Task Routing 仍应正确识别为 audience_insight，Data Plan 报告 comments/replies 尚未实现而不是降级为字幕总结。"
+    }
+  },
+  {
+    "id": 43,
+    "user_request": "我想做这个领域的产品，帮我看看用户最常提到哪些竞品，以及他们为什么喜欢或者讨厌这些竞品。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "竞品",
+        "替代品",
+        "喜欢/讨厌原因"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "市场研究必须真实用户反馈，Transcript 不能替代；当前应说明 comments/replies 缺口并保持 market_research 路由。"
+    }
+  },
+  {
+    "id": 44,
+    "user_request": "看看弹幕在哪几个时间点反应最强，以及当时视频刚好讲了什么。",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "弹幕峰值",
+        "高互动时间点",
+        "上下文内容"
+      ],
+      "must_require": [
+        "metadata",
+        "danmaku",
+        "transcript"
+      ],
+      "must_not_default": [
+        "full_comments",
+        "full_replies"
+      ],
+      "acceptance_note": "弹幕 Tool 尚未实现，应保留 audience_insight 路由并明确 danmaku 缺口；不要因为 transcript 可用就降级为 content_learn。"
+    }
+  },
+  {
+    "id": 45,
+    "user_request": "这个视频的封面点击欲挺强，帮我拆一下它用了哪些构图和字体手法。",
+    "expected": {
+      "primary_intent": "visual_decode",
+      "clarification_needed": false,
+      "depth": "quick",
+      "focus_semantics": [
+        "封面",
+        "构图",
+        "字体"
+      ],
+      "must_require": [
+        "metadata",
+        "cover",
+        "frames"
+      ],
+      "must_not_default": [
+        "transcript",
+        "comments",
+        "replies"
+      ],
+      "capability_gap": [
+        "cover"
+      ],
+      "acceptance_note": "封面 Tool / 视觉 Tool 尚未实现，应保持 visual_decode 路由而不是改为字幕分析。"
+    }
+  },
+  {
+    "id": 46,
+    "user_request": "帮我总结这个视频的三个核心观点，并看看评论里大家有没有类似问题。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "核心观点",
+        "FAQ信号",
+        "重复问题"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript",
+        "comments"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "Primary 必须是 content_learn（用户先要内容总结），Secondary audience_insight 只在内容总结完成后补充评论区反馈；不要把任务降级为纯评论分析。",
+      "secondary_intents": [
+        "audience_insight"
+      ]
+    }
+  },
+  {
+    "id": 47,
+    "user_request": "学完这个视频里介绍的方法后，帮我看看大家实际用起来时遇到什么问题。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "方法",
+        "摩擦",
+        "工作流"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "Primary 必须是 content_learn（学方法），Secondary audience_insight 看实际使用问题；不要因为后半句有「实际用」就误判为 market_research。",
+      "secondary_intents": [
+        "audience_insight"
+      ]
+    }
+  },
+  {
+    "id": 48,
+    "user_request": "总结作者的核心观点，并评估这些观点在评论里引发的争议。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "核心观点",
+        "争议",
+        "支持/反对理由"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "Primary content_learn（总结观点），Secondary audience_insight（争议分析）；争议是 audience 维度，不应直接升级为 market_research。",
+      "secondary_intents": [
+        "audience_insight"
+      ]
+    }
+  },
+  {
+    "id": 49,
+    "user_request": "看完这个视频的核心内容后，帮我评估里面有没有可商业化的产品机会。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "核心观点",
+        "痛点",
+        "机会假设"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "Primary content_learn（先理解视频），Secondary market_research（基于内容 + 反馈找机会）；单视频不证明市场成立，只形成机会假设。",
+      "secondary_intents": [
+        "market_research"
+      ]
+    }
+  },
+  {
+    "id": 50,
+    "user_request": "我想基于这个视频做一条自己的短视频。",
+    "expected": {
+      "primary_intent": null,
+      "clarification_needed": true,
+      "depth": null,
+      "focus_semantics": [
+        "复述原文 vs 重新创作",
+        "改编幅度"
+      ],
+      "must_require": [],
+      "must_not_default": [
+        "full_video",
+        "full_comments",
+        "market_research"
+      ],
+      "capability_gap": [],
+      "acceptance_note": "至少两种合理解释：(a) 用户只想复述/改写字幕成自己的文案（content_learn）；(b) 用户想学习视频的制作方式再创作（visual_decode）。两者数据路径与 LLM 任务差异大，应先简短澄清。"
+    }
+  },
+  {
+    "id": 51,
+    "user_request": "帮我看看这个视频。",
+    "expected": {
+      "primary_intent": "overview",
+      "clarification_needed": false,
+      "depth": "quick",
+      "focus_semantics": [
+        "开放式概览",
+        "值得深挖方向"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "full_video",
+        "full_danmaku",
+        "full_replies",
+        "market_research"
+      ],
+      "capability_gap": [],
+      "acceptance_note": "极简宽泛请求应进 overview preset，浅拿 transcript 给个轻量概览 + 1-2 个值得深挖的方向；不要猜测后直接走重型路径，也不要触发 market_research。"
+    }
+  },
+  {
+    "id": 52,
+    "user_request": "视频里大家都在夸 UP 主讲得好，但我怀疑评论区是不是真的这么一致。",
+    "expected": {
+      "primary_intent": "audience_insight",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "共识",
+        "观点分布",
+        "代表性抽样"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "用户求证共识，是 audience_insight；不要因为「夸」「买」字眼就升级为 market_research。market_research 必须有明确产品/付费/机会等用户信号才触发。"
+    }
+  },
+  {
+    "id": 53,
+    "user_request": "评论区里有没有人反复问价格、哪里买、什么时候上线这种问题？",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "购买/行动信号",
+        "价格/入口/上线询问"
+      ],
+      "must_require": [
+        "metadata",
+        "comments",
+        "replies"
+      ],
+      "must_not_default": [
+        "video",
+        "frames"
+      ],
+      "acceptance_note": "明确问价格/入口/上线 → 强市场信号 → market_research；但仍只形成行动/购买信号假设，不宣称「已证明付费意愿」。"
+    }
+  }
+]
