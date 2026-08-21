@@ -71,7 +71,11 @@ import {
 } from "./frame-extractor.js";
 import { detectVisualChanges, SceneDetectionError } from "./scene-detector.js";
 import { probeMedia } from "./media-probe.js";
-import { concatDashSegment, DashConcatError } from "./dash-concat.js";
+import {
+  concatDashSegment,
+  DashConcatError,
+  FfmpegUnavailableError as DashFfmpegUnavailableError,
+} from "./dash-concat.js";
 import { cachePaths } from "../lib/paths.js";
 import { makeSetupHint } from "../lib/setup-hint.js";
 
@@ -512,6 +516,18 @@ export async function getBilibiliFrames(
       ffmpegPath: dependencies.ffmpegPath,
     });
   } catch (error) {
+    if (error instanceof DashFfmpegUnavailableError) {
+      return fail({
+        videoUrl: resolvedInput.canonicalUrl,
+        bvid: metadata.bvid,
+        cid,
+        requestedAt,
+        reasonCode: FramesReasonCode.ffmpeg_unavailable,
+        message: `DASH 拼装需要 ffmpeg: ${error.message}`,
+        retryable: false,
+        videoKey,
+      });
+    }
     if (error instanceof DashConcatError) {
       return fail({
           videoUrl: resolvedInput.canonicalUrl,

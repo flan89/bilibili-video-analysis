@@ -9,7 +9,8 @@
  * - 未知 page / cid → 结构化失败
  * - metadata 接口失败 → frames Tool 失败
  * - playurl 失败 → playurl_prerequisite_failed
- * - DASH only (无 durl) → playurl_prerequisite_failed (M5.1 暂不支持 DASH)
+ * - DASH 拼装失败 → playurl_prerequisite_failed
+ * - DASH 拼装缺少 ffmpeg → ffmpeg_unavailable
  * - frame_extraction 失败 → frame_extraction_failed
  * - ffmpeg 不可用 → ffmpeg_unavailable
  *
@@ -40,6 +41,11 @@ import {
 import { detectVisualChanges } from "../../scripts/visual/scene-detector.js";
 import { probeMedia } from "../../scripts/visual/media-probe.js";
 import { getBilibiliFrames } from "../../scripts/visual/get.js";
+import {
+  concatDashSegment,
+  DashConcatError,
+  FfmpegUnavailableError as DashFfmpegUnavailableError,
+} from "../../scripts/visual/dash-concat.js";
 import { FrameSchema } from "../../scripts/models/frame.js";
 
 vi.mock("../../scripts/bilibili/playurl.js", async () => {
@@ -83,6 +89,16 @@ vi.mock("../../scripts/visual/media-probe.js", async () => {
   return {
     ...actual,
     probeMedia: vi.fn(),
+  };
+});
+
+vi.mock("../../scripts/visual/dash-concat.js", async () => {
+  const actual = await vi.importActual<typeof import("../../scripts/visual/dash-concat.js")>(
+    "../../scripts/visual/dash-concat.js",
+  );
+  return {
+    ...actual,
+    concatDashSegment: vi.fn(),
   };
 });
 
@@ -197,6 +213,7 @@ beforeEach(async () => {
   vi.mocked(extractScene).mockReset();
   vi.mocked(detectVisualChanges).mockReset();
   vi.mocked(probeMedia).mockReset();
+  vi.mocked(concatDashSegment).mockReset();
   // 默认 probe 成功
   vi.mocked(probeMedia).mockResolvedValue({
     durationSeconds: 2055,
@@ -508,8 +525,11 @@ describe("getBilibiliFrames — 错误路径", () => {
     expect(result.reasonCode).toBe("playurl_prerequisite_failed");
   });
 
-  it("DASH only (无 durl) → playurl_prerequisite_failed (M5.1 暂不支持 DASH)", async () => {
+  it("DASH 拼装失败 → playurl_prerequisite_failed", async () => {
     vi.mocked(resolvePlayUrl).mockResolvedValue(mockStreamDashOnly());
+    vi.mocked(concatDashSegment).mockRejectedValue(
+      new DashConcatError("模拟 DASH 拼装失败", "mock stderr", 1),
+    );
     const fetchImpl = vi.fn(async () => new Response("fake", { status: 200 })) as unknown as typeof fetch;
     const result = await getBilibiliFrames(
       { video: "BV1xx411c7mD", mode: "timestamp", timestamps: [1] },
@@ -519,6 +539,23 @@ describe("getBilibiliFrames — 错误路径", () => {
     expect(result.success).toBe(false);
     expect(result.reasonCode).toBe("playurl_prerequisite_failed");
     expect(result.message).toMatch(/DASH/);
+  });
+
+  it("DASH 拼装缺少 ffmpeg → ffmpeg_unavailable", async () => {
+    vi.mocked(resolvePlayUrl).mockResolvedValue(mockStreamDashOnly());
+    vi.mocked(concatDashSegment).mockRejectedValue(
+      new DashFfmpegUnavailableError("ffmpeg 不可用: ffmpeg"),
+    );
+    const fetchImpl = vi.fn(async () => new Response("fake", { status: 200 })) as unknown as typeof fetch;
+    const result = await getBilibiliFrames(
+      { video: "BV1xx411c7mD", mode: "timestamp", timestamps: [1] },
+      { client: new FramesFixtureClient(), fetchImpl, tempDir: scratch, skipTempCleanup: true },
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.reasonCode).toBe("ffmpeg_unavailable");
+    expect(result.message).toMatch(/DASH.*ffmpeg/);
+    expect(result.setupHint?.capability).toBe("media");
   });
 
   it("frame extraction 抛 FrameExtractionError → frame_extraction_failed", async () => {
