@@ -15,6 +15,8 @@ import { z } from "zod";
 
 /** 允许在 verification 中出现的工具名集合。 */
 export const VERIFIABLE_TOOL_NAMES = new Set([
+  // M7 新增：主题发现阶段的视频搜索 Tool（CLI 名 search-videos，归一化为 search）。
+  "search",
   "metadata",
   "subtitle",
   "comments",

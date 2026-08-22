@@ -1,0 +1,13 @@
+{
+  "code": 0,
+  "message": "0",
+  "data": {
+    "seid": "18207309528723333",
+    "page": 1,
+    "pagesize": 20,
+    "numResults": 235,
+    "result": {
+      "unexpected": "平台把 result 从数组改成了对象"
+    }
+  }
+}

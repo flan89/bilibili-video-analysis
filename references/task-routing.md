@@ -128,6 +128,33 @@ Focus 是开放集合。测试中的 Focus 只是示例，不是白名单。
 
 ---
 
+### `topic_research`
+
+用户没有提供具体视频，而是给出主题、问题或品类，需要先在B站发现合适的视频，再进行研究。
+
+典型目标：
+
+- 研究B站上关于某个主题的内容（共同强调的方法、主要分歧、各自独有经验）；
+- 从主题出发寻找并比较多个视频；
+- 只想找几个值得看的视频；
+- 比较同一主题下的不同方法或流派；
+- 围绕某个问题收集多个视频中的答案。
+
+常见 Focus 示例：
+
+`method_comparison`、`shared_consensus`、`key_disagreements`、`complementary_insights`、`representative_sampling`、`topic_landscape`、`trend_snapshot`、`quick_recommendation`。
+
+判定边界：
+
+- **没有视频、需要先发现内容 → `topic_research`**；用户给了一个具体视频问“里面关于 X 讲了什么”，是 `content_learn` 的定向问题，不是 `topic_research`；
+- **比较分析不单独成为 Intent**：比较多个视频 = `topic_research`；比较同一视频里弹幕与评论 = `audience_insight` 的跨渠道 Focus；
+- **“只想找几个相关视频”** 是 `topic_research + quick`，搜索并解释候选即可，不自动深入分析；
+- **明确商业目标 + 需要跨视频发现**：按用户最终目标决定 `market_research` 与 `topic_research` 的主次组合，商业结论仍受 `market_research` 边界约束；
+- **趋势只是开放 Focus**：出现“最近”“热门”不自动承诺历史趋势能力；当前搜索快照只支持当前观察窗口内的表述；
+- **用户直接要求当前榜单或热搜**：Intent 仍应正确识别，但当前 Skill 没有榜单 / 热搜 Tool，数据规划必须报告能力缺口，不能偷偷改成普通关键词搜索冒充榜单。
+
+---
+
 ### `overview`
 
 用户目标很宽泛，但低成本浏览可以先产生价值或帮助决定下一步时使用。

@@ -243,7 +243,9 @@ export class BilibiliClient implements BilibiliSubtitleClient {
           code: "http_error",
           message: `B站接口请求失败，HTTP ${response.status}`,
           httpStatus: response.status,
-          retryable: response.status >= 500 || response.status === 429,
+          // 412 是B站风控拦截: retryable=true 只表示稍后重试可能有意义,
+          // 调用方 (Agent) 不应立即连续重试 (M7 §6.5).
+          retryable: response.status >= 500 || response.status === 429 || response.status === 412,
         });
       }
 

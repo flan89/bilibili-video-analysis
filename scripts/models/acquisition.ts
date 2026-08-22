@@ -13,6 +13,8 @@ export const DataKindSchema = z.enum([
   "danmaku",
   "comments",
   "replies",
+  /** M7 新增: 主题发现阶段的视频搜索候选列表 (V2 topic_research 阶段一). */
+  "video_candidates",
 ]);
 export type DataKind = z.infer<typeof DataKindSchema>;
 

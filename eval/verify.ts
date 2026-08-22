@@ -50,8 +50,10 @@ export interface VerifyAgentRunsResult {
   pendingSemanticJudge: Array<{ caseId: string; criteriaCount: number }>;
 }
 
-/** 工具名归一化：metadata / subtitle / comments / danmaku / video / frames / audio / timeline / cover。 */
+/** 工具名归一化：search / metadata / subtitle / comments / danmaku / video / frames / audio / timeline / cover。 */
 const KNOWN_TOOL_NAMES = new Set([
+  // M7 新增：主题发现阶段的视频搜索 Tool（CLI 名 search-videos，归一化为 search）。
+  "search",
   "metadata",
   "subtitle",
   "comments",
@@ -71,6 +73,7 @@ function extractToolMentions(text: string): Set<string> {
   const found = new Set<string>();
   for (const name of KNOWN_TOOL_NAMES) {
     const aliasMap: Record<string, RegExp[]> = {
+      search: [/\bsearch(-videos)?\b/i, /搜索\s*Tool/, /搜索工具/, /视频搜索/],
       metadata: [/\bmetadata\b/i, /元信息/, /视频元信息/],
       subtitle: [/\bsubtitle\b/i, /官方字幕/, /字幕\s*Tool/, /字幕工具/],
       comments: [/\bcomments?\b/i, /评论/],

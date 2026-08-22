@@ -54,7 +54,7 @@ function loadRoutingCases(): unknown {
 }
 
 /**
- * 当前 V1 已实现的数据能力。DataKind 包含但未实现的也视作"V1 仍未实现"。
+ * 当前 Skill 已实现的数据能力。DataKind 包含但未实现的也视作"仍未实现"。
  * 这是评估"Capability Gap"是否需要被报告的固定事实集。
  */
 const V1_AVAILABLE_DATA_KINDS: ReadonlySet<string> = new Set([
@@ -64,6 +64,8 @@ const V1_AVAILABLE_DATA_KINDS: ReadonlySet<string> = new Set([
   "replies",
   "danmaku",
   "frames",
+  // M7 新增：主题发现阶段的视频搜索候选。
+  "video_candidates",
 ]);
 
 /**
@@ -97,8 +99,8 @@ function partitionDataPlan(caseExpected: {
 }
 
 describe("routing-cases 数据基线", () => {
-  it("53 条案例都符合当前任务路由契约，且 ID 不重复", () => {
-    const cases = z.array(RoutingCaseSchema).length(53).parse(loadRoutingCases());
+  it("61 条案例都符合当前任务路由契约，且 ID 不重复", () => {
+    const cases = z.array(RoutingCaseSchema).length(61).parse(loadRoutingCases());
     const ids = new Set(cases.map((item) => item.id));
 
     expect(ids.size).toBe(cases.length);
@@ -111,7 +113,7 @@ describe("routing-cases 数据基线", () => {
  * 该轴独立于当前 Tool Availability：即使 Required Data 未实现，Intent 仍应正确。
  */
 describe("routing-cases 任务路由正确性", () => {
-  const cases = z.array(RoutingCaseSchema).length(53).parse(loadRoutingCases());
+  const cases = z.array(RoutingCaseSchema).length(61).parse(loadRoutingCases());
 
   it("Focus 是开放集合：不允许把 focus_semantics 固化为 enum 白名单或要求逐字匹配", () => {
     // 该断言通过"不存在的字符串"也能通过的方式守护开放集合：
@@ -182,8 +184,8 @@ describe("routing-cases 任务路由正确性", () => {
   it("Cap 4 条：未实现 Intent 不应被错误降级到 content_learn", () => {
     // 这是核心保护：capability_gap 声明的 case 期望 LLM 仍路由到正确 Intent。
     // 在 Task Routing 轴验证：纯 capability_gap case（无 secondary_intents）
-    // 的 primary_intent 必须是 visual_decode / audience_insight / market_research，
-    // 而不是 content_learn / overview。
+    // 的 primary_intent 必须是 visual_decode / audience_insight / market_research /
+    // topic_research（M7：榜单/趋势等缺口），而不是 content_learn / overview。
     // 复合 Intent case（content_learn primary + audience/market secondary）允许
     // capability_gap，因为 gap 是为 secondary 服务的。
     const pureGapCases = cases.filter(
@@ -195,7 +197,7 @@ describe("routing-cases 任务路由正确性", () => {
     expect(pureGapCases.length).toBeGreaterThanOrEqual(3);
     for (const c of pureGapCases) {
       expect(
-        ["visual_decode", "audience_insight", "market_research"],
+        ["visual_decode", "audience_insight", "market_research", "topic_research"],
         `case ${c.id} 期望 Capability Gap 但 primary_intent 是 content_learn/overview，未体现缺口路由`,
       ).toContain(c.expected.primary_intent);
     }
@@ -207,7 +209,7 @@ describe("routing-cases 任务路由正确性", () => {
  * 评估 Required / Avoid / Capability Gap 是否与当前 Skill 真实能力一致。
  */
 describe("routing-cases 数据计划可执行性", () => {
-  const cases = z.array(RoutingCaseSchema).length(53).parse(loadRoutingCases());
+  const cases = z.array(RoutingCaseSchema).length(61).parse(loadRoutingCases());
 
   it("未实现数据的 case 必须显式声明 capability_gap，避免 Agent 误降级为 content_learn", () => {
     const unmet = cases.filter((c) => {
@@ -290,7 +292,7 @@ describe("routing-cases 数据计划可执行性", () => {
  * 等关键路由情形有代表性 case 覆盖，避免后续 P1-3 LLM Judge 缺乏输入。
  */
 describe("routing-cases Intent × Focus 覆盖度与边界", () => {
-  const cases = z.array(RoutingCaseSchema).length(53).parse(loadRoutingCases());
+  const cases = z.array(RoutingCaseSchema).length(61).parse(loadRoutingCases());
 
   it("澄清型请求至少 2 条，覆盖不同分叉（学内容 vs 学制作、复述 vs 创作）", () => {
     const clarificationCases = cases.filter(
@@ -379,5 +381,53 @@ describe("routing-cases Intent × Focus 覆盖度与边界", () => {
       marketCases.length,
       "market_research 应有「购买/价格/上线」类 case 防止漏触发",
     ).toBeGreaterThanOrEqual(1);
+  });
+
+  /**
+   * M7 批次 B：topic_research 路由覆盖度。
+   * 守护主题发现场景的代表性 case，防止后续改动丢失关键判定边界。
+   */
+  it("M7 topic_research 覆盖：主题研究 / quick 找视频 / 榜单缺口 / 趋势 / 单视频不误触发搜索", () => {
+    const topicCases = cases.filter(
+      (c) => c.expected.primary_intent === "topic_research",
+    );
+    expect(
+      topicCases.length,
+      "topic_research 应有代表性 case（标准研究/quick/榜单/趋势）",
+    ).toBeGreaterThanOrEqual(4);
+
+    // 榜单请求：Intent 正确 + 报告能力缺口，不偷偷改成关键词搜索冒充榜单
+    const rankingCase = cases.find(
+      (c) =>
+        c.expected.primary_intent === "topic_research" &&
+        (c.expected.capability_gap ?? []).includes("trending_ranking"),
+    );
+    expect(rankingCase).toBeDefined();
+
+    // 趋势请求：不因缺少历史能力被降级成普通内容总结
+    const trendCase = cases.find(
+      (c) =>
+        c.expected.primary_intent === "topic_research" &&
+        (c.expected.capability_gap ?? []).includes("historical_trend_data"),
+    );
+    expect(trendCase).toBeDefined();
+
+    // 单视频定向主题问题仍是 content_learn，且不触发搜索
+    const singleVideoCase = cases.find(
+      (c) =>
+        c.expected.primary_intent === "content_learn" &&
+        c.expected.must_not_default.includes("video_candidates"),
+    );
+    expect(singleVideoCase).toBeDefined();
+
+    // 市场目标 + 跨视频发现：market_research 主导 + topic_research 辅助
+    const marketTopicCombo = cases.find(
+      (c) =>
+        c.expected.primary_intent === "market_research" &&
+        (c.expected as { secondary_intents?: string[] }).secondary_intents?.includes(
+          "topic_research",
+        ),
+    );
+    expect(marketTopicCombo).toBeDefined();
   });
 });

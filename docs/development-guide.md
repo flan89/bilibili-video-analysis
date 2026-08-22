@@ -38,6 +38,7 @@ RUN_BILIBILI_INTEGRATION=1 npm run test:integration
 - `BILIBILI_SUBTITLE_VIDEO`：已知有字幕的视频；
 - `BILIBILI_NO_SUBTITLE_VIDEO`：已知无字幕的视频；
 - `BILIBILI_MULTIPART_SUBTITLE_VIDEO`：可选多P视频；
+- `BILIBILI_SEARCH_QUERY`：搜索接口集成测试使用的关键词；
 - `BILIBILI_COOKIE`：部分集成测试或直接调用底层函数时可选的登录状态，不得打印或提交。当前正式命令行入口不会自动读取该变量或浏览器 Cookie。
 
 真实网络测试用于发现平台兼容性问题，不能替代固定样例测试，也不能混入普通 `npm test`。
@@ -62,6 +63,7 @@ npm run build
 
 ```bash
 node dist/cli.mjs tool metadata '{"video":"BV号或视频链接"}'
+node dist/cli.mjs tool search-videos '{"query":"Agent Skill 设计","order":"relevance"}'
 node dist/cli.mjs tool subtitle '{"video":"BV号或视频链接"}' --compact
 node dist/cli.mjs tool subtitle '{"video":"BV号或视频链接?p=2"}' --compact
 node dist/cli.mjs tool subtitle '{"video":"BV号或视频链接","page":2,"language":"zh-CN"}' --compact
@@ -91,6 +93,7 @@ ffmpeg 自动安装当前支持 macOS 的 Homebrew 和 Ubuntu/Debian 的 apt。�
 
 | 命令名 | 主要实现 | Tool 说明 | 职责 |
 |---|---|---|---|
+| `search-videos` | `scripts/discovery/` | `references/tools/video-search.md` | 按单个搜索词取得一页候选视频 |
 | `metadata` | `scripts/metadata/` | `references/tools/metadata.md` | 视频元信息和分P |
 | `subtitle` | `scripts/subtitle/` | `references/tools/subtitle.md` | 官方字幕和本地语音转写 |
 | `danmaku` | `scripts/danmaku/` | `references/tools/danmaku.md` | 带时间位置的弹幕 |
@@ -108,6 +111,7 @@ ffmpeg 自动安装当前支持 macOS 的 Homebrew 和 Ubuntu/Debian 的 apt。�
 | `visual_decode` | `references/analysis/visual-decode.md` | 画面、演示、节奏和表达作用 |
 | `audience_insight` | `references/analysis/audience-insight.md` | 观众关注、态度、分歧和反馈 |
 | `market_research` | `references/analysis/market-research.md` | 明确商业目标下的需求和竞品信号 |
+| `topic_research` | `references/analysis/topic-research.md` | 候选选择、跨视频共识、分歧和互补观点 |
 
 分析协议指导宿主 Agent 如何阅读、比较和判断证据，不生成固定报告格式，也不在程序中实现需要第二套模型的分析器。
 
@@ -223,12 +227,16 @@ git push origin v1.0.0
 ```text
 references/tools/example.md
 
-scripts/bilibili/
-  example.ts
-  raw-schemas.ts
-
-scripts/tools/ 或对应能力目录/
+scripts/example/ 或对应能力目录/
+  bilibili-adapter.ts
+  bilibili-raw-schema.ts
   get-example.ts
+
+scripts/bilibili/
+  仅在两个及以上能力需要时新增公共请求、签名、错误或协议代码
+
+scripts/models/
+  需要跨能力复用时放稳定内部模型
 
 tests/fixtures/
   example-*
@@ -241,12 +249,12 @@ tests/integration/
   example.integration.test.ts
 ```
 
-目录可以按能力实际需要调整，但必须保持平台原始字段、内部模型和 Tool 输出之间的边界。
+领域专属的 B站协议代码与 Tool 放在同一能力目录；`scripts/bilibili/` 只保存多个能力共同使用的平台基础代码。目录可以按能力实际需要调整，但必须保持平台原始字段、内部模型和 Tool 输出之间的边界。
 
 建议实施顺序：
 
 1. 明确 Tool 负责取得什么数据，以及哪些语义判断仍由 Agent 完成；
-2. 在 `scripts/bilibili/` 建立最小原始模型和平台访问代码；
+2. 在对应能力目录建立最小原始 Schema、B站适配代码和字段转换；只有出现两个及以上消费者时，才把真正公共的平台代码提取到 `scripts/bilibili/`；
 3. 在 `scripts/models/` 或能力目录建立稳定内部模型；
 4. 实现无状态 Tool，返回数据、采集状态、失败原因和必要的来源位置；
 5. 在 `scripts/cli/commands/tool.ts` 注册公开命令；

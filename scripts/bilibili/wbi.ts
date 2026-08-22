@@ -40,6 +40,9 @@ export const MIXIN_KEY_ENCODING_TAB: readonly number[] = Object.freeze([
 /** B 站 WBI 特殊字符过滤正则. */
 const WBI_CHR_FILTER = /[!'()*]/g;
 
+/** WBI 密钥接口请求超时; 与 BilibiliClient 默认值保持一致. */
+const WBI_KEYS_TIMEOUT_MS = 15_000;
+
 /**
  * 从 (img_key + sub_key) 拼接字符串生成 32 字符 mixin_key.
  *
@@ -193,17 +196,28 @@ export class WbiSigner {
     if (this.cached !== null && this.cached.expiresAt > now) {
       return { imgKey: this.cached.imgKey, subKey: this.cached.subKey };
     }
-    const r = await this.fetchImpl("https://api.bilibili.com/x/web-interface/nav", {
-      headers: {
-        "User-Agent": this.userAgent,
-        ...(this.cookie ? { cookie: this.cookie } : {}),
-      },
-    });
+    // 与 BilibiliClient 一致的超时控制: nav 请求失败/挂起不应阻塞签名调用方.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), WBI_KEYS_TIMEOUT_MS);
+    let r: Response;
+    try {
+      r = await this.fetchImpl("https://api.bilibili.com/x/web-interface/nav", {
+        signal: controller.signal,
+        headers: {
+          "User-Agent": this.userAgent,
+          ...(this.cookie ? { cookie: this.cookie } : {}),
+        },
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!r.ok) {
       throw new BilibiliError({
         code: "wbi_keys_http_error",
         message: `x/web-interface/nav HTTP ${r.status}`,
         httpStatus: r.status,
+        // 密钥获取是环境性问题, 稍后重试可能恢复.
+        retryable: true,
       });
     }
     const raw = await r.json() as unknown;
@@ -212,6 +226,7 @@ export class WbiSigner {
       throw new BilibiliError({
         code: "wbi_keys_parse_error",
         message: "x/web-interface/nav 返 JSON 跟 schema 不匹配",
+        retryable: true,
         cause: nav.error,
       });
     }
@@ -221,6 +236,7 @@ export class WbiSigner {
         code: "wbi_keys_unavailable",
         message: "x/web-interface/nav 返 wbi_img 缺失, 拿不到 WBI 签名密钥",
         apiCode: nav.data.code,
+        retryable: true,
       });
     }
     const keys = extractWbiKeysFromImgUrls(wbiImg.img_url, wbiImg.sub_url);

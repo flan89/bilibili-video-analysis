@@ -1,7 +1,7 @@
 /**
  * tests/unit/tool-envelope.test.ts: 跨 Tool Envelope 一致性测试.
  *
- * 5 个 Tool:
+ * 6 个 Tool:
  *   - subtitle (scripts/subtitle/get.ts: GetSubtitleOutputSchema)
  *   - danmaku  (scripts/danmaku/get.ts: GetDanmakuOutputSchema)
  *   - comments (scripts/comments/get.ts: GetCommentsOutputSchema)
@@ -14,19 +14,21 @@ import { GetSubtitleOutputSchema } from "../../scripts/index.js";
 import { GetDanmakuOutputSchema } from "../../scripts/index.js";
 import { GetCommentsOutputSchema } from "../../scripts/index.js";
 import { GetMetadataOutputSchema } from "../../scripts/index.js";
+import { SearchVideosOutputSchema } from "../../scripts/index.js";
 import { GetFramesOutputSchema } from "../../scripts/visual/model.js";
 import {
   AcquisitionRecordSchema,
   AcquisitionStateSchema,
 } from "../../scripts/models/index.js";
 
-/** 5 个 Tool 顶层 OutputSchema 元数据, 测试循环用. */
+/** 6 个 Tool 顶层 OutputSchema 元数据, 测试循环用. */
 const TOOL_OUTPUTS = [
   { name: "subtitle", schema: GetSubtitleOutputSchema, topLevelError: true },
   { name: "danmaku", schema: GetDanmakuOutputSchema, topLevelError: true },
   { name: "comments", schema: GetCommentsOutputSchema, topLevelError: true },
   { name: "metadata", schema: GetMetadataOutputSchema, topLevelError: true },
   { name: "frames", schema: GetFramesOutputSchema, topLevelError: true },
+  { name: "search-videos", schema: SearchVideosOutputSchema, topLevelError: true },
 ] as const;
 
 /**
@@ -146,7 +148,7 @@ describe("Tool Envelope 一致性", () => {
       expect((shape.warnings as z.ZodTypeAny)._def.typeName).toBe("ZodDefault");
     });
 
-    it("dataKind 必须是 DataKindSchema, 10 个 enum 覆盖 metadata/cover/transcript/video/audio/frames/timeline/danmaku/comments/replies", () => {
+    it("dataKind 必须是 DataKindSchema, 11 个 enum 覆盖 metadata/cover/transcript/video/audio/frames/timeline/danmaku/comments/replies/video_candidates", () => {
       const shape = (AcquisitionRecordSchema as z.ZodObject<z.ZodRawShape>)
         .shape;
       expect(shape.dataKind).toBeDefined();
@@ -168,7 +170,7 @@ describe("Tool Envelope 一致性", () => {
     });
   });
 
-  describe("Happy path: 5 个 Tool 最小合法输出都能 parse", () => {
+  describe("Happy path: 6 个 Tool 最小合法输出都能 parse", () => {
     it("subtitle success", () => {
       const out = GetSubtitleOutputSchema.parse({
         success: true,
@@ -291,9 +293,37 @@ describe("Tool Envelope 一致性", () => {
       });
       expect(out.acquisition?.status).toBe("success");
     });
+
+    it("search-videos success (含 missing 演示: 空结果也是 success=true)", () => {
+      const out = SearchVideosOutputSchema.parse({
+        success: true,
+        query: {
+          keyword: "Agent Skill",
+          order: "relevance",
+          page: 1,
+          pageSize: 20,
+        },
+        candidates: [],
+        pageInfo: {
+          page: 1,
+          pageSize: 20,
+          returnedCount: 0,
+          hasNextPage: false,
+        },
+        observedAt: "2026-08-19T00:00:00.000Z",
+        acquisition: {
+          dataKind: "video_candidates",
+          status: "missing",
+          itemCount: 0,
+          requestedAt: "2026-08-19T00:00:00.000Z",
+        },
+      });
+      expect(out.acquisition.status).toBe("missing");
+      expect(out.success).toBe(true);
+    });
   });
 
-  describe("Failed path: 5 个 Tool 失败输出都能 parse 且带 reasonCode", () => {
+  describe("Failed path: 6 个 Tool 失败输出都能 parse 且带 reasonCode", () => {
     it("subtitle failed (含 reasonCode 演示)", () => {
       const out = GetSubtitleOutputSchema.parse({
         success: false,
@@ -416,6 +446,42 @@ describe("Tool Envelope 一致性", () => {
       expect(out.acquisition?.status).toBe("failed");
       expect(out.acquisition?.reasonCode).toBe("ffmpeg_unavailable");
       expect(out.error?.retryable).toBe(false);
+    });
+
+    it("search-videos failed (风控: retryable=true 但不应立即连续重试)", () => {
+      const out = SearchVideosOutputSchema.parse({
+        success: false,
+        query: {
+          keyword: "Agent Skill",
+          order: "relevance",
+          page: 1,
+          pageSize: 20,
+        },
+        candidates: [],
+        pageInfo: {
+          page: 1,
+          pageSize: 20,
+          returnedCount: 0,
+          hasNextPage: false,
+        },
+        observedAt: "2026-08-19T00:00:00.000Z",
+        acquisition: {
+          dataKind: "video_candidates",
+          status: "failed",
+          reasonCode: "search_risk_control",
+          message: "搜索失败: B 站搜索接口触发风控 (HTTP 412)",
+          requestedAt: "2026-08-19T00:00:00.000Z",
+        },
+        error: {
+          code: "search_risk_control",
+          message: "B 站搜索接口触发风控 (HTTP 412)",
+          retryable: true,
+          httpStatus: 412,
+        },
+      });
+      expect(out.acquisition.reasonCode).toBe("search_risk_control");
+      expect(out.error?.retryable).toBe(true);
+      expect(out.error?.httpStatus).toBe(412);
     });
   });
 

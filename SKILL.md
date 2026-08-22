@@ -1,6 +1,6 @@
 ---
 name: bilibili-video-analysis
-description: 分析单个B站视频并把视频内容、画面和公开观众反馈转化为可回查的学习与研究结果。适用于 content_learn、visual_decode、audience_insight、显式 market_research 以及这些 Intent 的必要组合。Skill 先理解用户目标，再规划最小证据、调用原子 Tool、按专业分析协议推理，并在证据不足时明确降级；不会为了“完整”抓取无关数据，也不会把单视频信号写成市场已验证。
+description: 从主题发现或具体B站视频开始，把视频内容、画面和公开观众反馈转化为可回查的学习与研究结果。适用于 content_learn、visual_decode、audience_insight、显式 market_research、topic_research（主题搜索与跨视频研究）以及这些 Intent 的必要组合。Skill 先理解用户目标，再规划最小证据、调用原子 Tool、按专业分析协议推理，并在证据不足时明确降级；不会为了“完整”抓取无关数据，也不会把单视频信号写成市场已验证。
 ---
 
 # B站视频分析
@@ -40,6 +40,7 @@ description: 分析单个B站视频并把视频内容、画面和公开观众反
 - `visual_decode`
 - `audience_insight`
 - `market_research`
+- `topic_research`
 - `overview`
 
 Focus 是开放集合，不要把测试 case 里的字符串当白名单。
@@ -47,6 +48,8 @@ Focus 是开放集合，不要把测试 case 里的字符串当白名单。
 只有当不同合理解释会显著改变数据路径或分析方法、且低成本步骤无法兼顾时，才问一个简短澄清问题。
 
 **当前 Tool 是否可用，不能反向修改用户真实 Intent。**
+
+用户没有提供具体视频、而是给出主题或问题时，属于 `topic_research`：先按 [`references/discovery-strategy.md`](references/discovery-strategy.md) 发现候选，再对选中视频复用单视频流程。单视频任务不加载该策略。
 
 ## 2. Data Routing：再决定需要什么证据
 
@@ -72,6 +75,7 @@ Tool 负责外部数据与确定性处理，不负责语义结论。
 
 | 数据能力 | Tool reference |
 |---|---|
+| 视频搜索（仅 `topic_research` 阶段一） | [`references/tools/video-search.md`](references/tools/video-search.md) |
 | 视频元信息 | [`references/tools/metadata.md`](references/tools/metadata.md) |
 | Transcript（官方字幕 + ASR fallback） | [`references/tools/subtitle.md`](references/tools/subtitle.md) |
 | 弹幕 | [`references/tools/danmaku.md`](references/tools/danmaku.md) |
@@ -118,6 +122,7 @@ Tool 负责外部数据与确定性处理，不负责语义结论。
 - `visual_decode` → [`references/analysis/visual-decode.md`](references/analysis/visual-decode.md)
 - `audience_insight` → [`references/analysis/audience-insight.md`](references/analysis/audience-insight.md)
 - `market_research` → [`references/analysis/market-research.md`](references/analysis/market-research.md)
+- `topic_research` → [`references/analysis/topic-research.md`](references/analysis/topic-research.md)
 
 Analysis Protocol 提供的是**阅读与判断方法**，不是固定报告模板。最终结构服从用户问题。
 
@@ -145,7 +150,7 @@ Required Data 求并集
 - **语义不能串味**：同一评论在 audience 中可以是 Concern，在 market 中可以进一步成为 Pain 候选，但两个判断必须分别满足各自协议；
 - Optional Data 不因“多 Intent”自动升级成 Required；
 - 某一个 Intent 的 Required Data 失败，不等于整项任务失败：完成其它证据足够支持的部分，并明确缺口；
-- `market_research` 的单视频边界不会因为与其它 Intent 组合而变松。
+- `market_research` 的单视频边界不会因为与其它 Intent 组合而变松；跨多个视频也只能增强机会假设，不能升级为“市场已验证”。
 
 ## 6. Grounding：结论要能回到来源
 
@@ -157,7 +162,8 @@ Required Data 求并集
 - 重要结论能否定位到字幕时间、评论 / 回复 ID、弹幕时间或 Frame 时间；
 - 标题、简介、分P标题是否被误当成正文证据；
 - ASR / 平台字幕术语错误是否可能改变结论；
-- 视觉中的“作用”、市场中的“机会”、Audience 中的“共识”等是否被误写成直接事实。
+- 视觉中的“作用”、市场中的“机会”、Audience 中的“共识”等是否被误写成直接事实；
+- 跨视频结论是否定位到了具体视频（BV 号 + 字幕时间 / 评论 ID / 弹幕时间 / Frame 时间），而不是只说“多个视频都提到”。
 
 不必机械给每句话加引用，优先保证**影响结论的证据可回查**。
 
@@ -169,6 +175,7 @@ Required Data 求并集
 - 是否存在 partial、缺失分P、抽样、未展开回复、未覆盖时间段或失败数据源；
 - 当前数据是否支持“整体 / 多数 / 高频 / 共识 / 全片”等强词；
 - 数据为空时，是否只是“当前样本没有观察到”；
+- 主题研究是否公开了搜索范围：搜索词、查询时间、查看的候选量、深入分析的样本和创作者数量；
 - 当前缺口会不会实质改变结论。
 
 **不能把局部数据写成整体结论。**

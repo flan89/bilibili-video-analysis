@@ -1,0 +1,46 @@
+{
+  "code": 0,
+  "message": "0",
+  "data": {
+    "seid": "18207309528721111",
+    "page": 2,
+    "pagesize": 20,
+    "numResults": 235,
+    "result": [
+      {
+        "type": "special",
+        "position": 1,
+        "title": "猜你要搜",
+        "keywords": ["Agent", "Skill"]
+      },
+      {
+        "type": "video",
+        "id": 114550007778899,
+        "author": "示例UP主D",
+        "mid": 11223344,
+        "arcurl": "//www.bilibili.com/bangumi/play/ep123456",
+        "title": "一档与主题相关的番剧切片（无法提取 BV 号）",
+        "pubdate": 1770000000,
+        "duration": "03:21"
+      },
+      {
+        "foo": "bar",
+        "unknown_structure": true
+      },
+      {
+        "type": "video",
+        "id": 114550003334455,
+        "author": "示例UP主E",
+        "mid": 55667788,
+        "arcurl": "//www.bilibili.com/video/BV1Partial1x",
+        "bvid": "BV1Partial1x",
+        "title": "字段不完整的候选（缺简介/标签/发布时间，统计占位）",
+        "picture": "//i0.hdslb.com/bfs/archive/partial-cover-e.jpg",
+        "play": "--",
+        "video_review": "--",
+        "favorites": "--",
+        "duration": "8:05"
+      }
+    ]
+  }
+}

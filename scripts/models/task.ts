@@ -7,6 +7,8 @@ export const TaskIntentSchema = z.enum([
   "visual_decode",
   "audience_insight",
   "market_research",
+  /** M7 (V2) 新增: 从主题或问题出发，先发现候选视频再研究多个视频。 */
+  "topic_research",
   "overview",
 ]);
 export type TaskIntent = z.infer<typeof TaskIntentSchema>;

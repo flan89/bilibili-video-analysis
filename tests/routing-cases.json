@@ -1291,5 +1291,186 @@
       ],
       "acceptance_note": "明确问价格/入口/上线 → 强市场信号 → market_research；但仍只形成行动/购买信号假设，不宣称「已证明付费意愿」。"
     }
+  },
+  {
+    "id": 54,
+    "user_request": "帮我研究一下B站上关于 Agent Skill 设计的内容。先找一些有代表性的视频，再总结它们共同强调的方法、主要分歧和各自独有的经验。",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "共同方法",
+        "主要分歧",
+        "独有经验",
+        "代表性样本"
+      ],
+      "must_require": [
+        "video_candidates",
+        "transcript"
+      ],
+      "must_not_default": [
+        "full_comments",
+        "full_danmaku",
+        "frames"
+      ],
+      "acceptance_note": "阶段一搜索候选，阶段二默认深入 3~5 个视频的 Transcript；评论、弹幕和画面不因「跨视频」自动升级为 Required；跨视频结论要能回到具体视频证据。"
+    }
+  },
+  {
+    "id": 55,
+    "user_request": "我想学 Rust，帮我找几个B站上值得看的入门视频就行，不用深入分析。",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "quick",
+      "focus_semantics": [
+        "值得看的入门视频",
+        "快速推荐"
+      ],
+      "must_require": [
+        "video_candidates"
+      ],
+      "must_not_default": [
+        "transcript",
+        "full_comments",
+        "danmaku",
+        "frames"
+      ],
+      "acceptance_note": "quick 找视频：只搜索并解释候选，不自动下载字幕或深入分析任何视频。"
+    }
+  },
+  {
+    "id": 56,
+    "user_request": "B站上讲个人知识库搭建的视频里，不同方法流派有什么区别？各自适合什么人？",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "方法比较",
+        "流派差异",
+        "适用人群"
+      ],
+      "must_require": [
+        "video_candidates",
+        "transcript"
+      ],
+      "must_not_default": [
+        "full_comments",
+        "frames"
+      ],
+      "acceptance_note": "比较同一主题下不同方法：先发现候选，再对选中视频取 Transcript 做方法比较；不因比较任务默认抓评论或画面。"
+    }
+  },
+  {
+    "id": 57,
+    "user_request": "我想做 AI 编程工具方向的产品，帮我找B站上相关的测评和讨论视频，研究用户对这类工具的真实需求和抱怨。",
+    "expected": {
+      "primary_intent": "market_research",
+      "clarification_needed": false,
+      "depth": "deep",
+      "focus_semantics": [
+        "用户需求",
+        "抱怨",
+        "测评反馈",
+        "跨视频发现"
+      ],
+      "must_require": [
+        "video_candidates",
+        "comments"
+      ],
+      "must_not_default": [],
+      "secondary_intents": [
+        "topic_research"
+      ],
+      "acceptance_note": "商业目标主导（market_research primary）：先跨视频发现候选，再对选中视频按 market Focus 获取评论证据；跨多个视频也只能增强机会假设，不能升级为「市场已验证」。"
+    }
+  },
+  {
+    "id": 58,
+    "user_request": "帮我看看B站现在科技区最热门的视频都有哪些。",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "当前热门",
+        "科技区榜单"
+      ],
+      "must_require": [],
+      "must_not_default": [
+        "video_candidates"
+      ],
+      "capability_gap": [
+        "trending_ranking"
+      ],
+      "acceptance_note": "用户要求当前热门/榜单；Intent 识别为 topic_research，但 Skill 没有榜单/热搜 Tool。数据规划必须报告能力缺口，不能偷偷用普通关键词搜索冒充榜单。"
+    }
+  },
+  {
+    "id": 59,
+    "user_request": "帮我看看这个视频里关于 Agent Skill 设计的部分讲得怎么样。",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "Agent Skill 设计",
+        "定向主题问答"
+      ],
+      "must_require": [
+        "metadata",
+        "transcript"
+      ],
+      "must_not_default": [
+        "video_candidates",
+        "comments",
+        "replies"
+      ],
+      "acceptance_note": "用户给了具体视频并问其中的主题内容，是 content_learn 的定向问题；不要因为新增了 topic_research 能力就先触发搜索。"
+    }
+  },
+  {
+    "id": 60,
+    "user_request": "帮我研究一下B站上的健身内容。",
+    "expected": {
+      "primary_intent": null,
+      "clarification_needed": true,
+      "depth": null,
+      "focus_semantics": [
+        "快速找视频 vs 深入跨视频研究"
+      ],
+      "must_require": [],
+      "must_not_default": [
+        "full_video",
+        "full_comments",
+        "market_research"
+      ],
+      "acceptance_note": "「研究健身内容」至少两种解释：(a) 快速推荐几个值得看的视频（topic_research + quick，只看候选）；(b) 跨视频深入比较方法与共识（topic_research + deep，深入 3~5 个视频）。数据成本差异大，应先简短澄清。"
+    }
+  },
+  {
+    "id": 61,
+    "user_request": "Agent Skill 这个主题最近在B站是不是越来越火了？",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "主题热度",
+        "趋势快照"
+      ],
+      "must_require": [
+        "video_candidates"
+      ],
+      "must_not_default": [
+        "fabricated_trend_conclusion"
+      ],
+      "capability_gap": [
+        "historical_trend_data"
+      ],
+      "acceptance_note": "趋势是 topic_research 的开放 Focus（trend_snapshot）：Intent 不能因为缺少历史数据被降级为普通内容总结。当前只有搜索快照，可以用候选发布时间分布做当前观察，但必须显式说明无法证明持续上升趋势。"
+    }
   }
 ]

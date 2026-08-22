@@ -10,6 +10,7 @@ import { getBilibiliDanmaku } from "../../danmaku/get.js";
 import { getBilibiliComments } from "../../comments/get.js";
 import { getBilibiliCommentReplies } from "../../comments/get-replies.js";
 import { getBilibiliFrames } from "../../visual/get.js";
+import { searchBilibiliVideos } from "../../discovery/search-videos.js";
 import { toAgentSubtitleOutput } from "../subtitle/agent-output.js";
 import { toAgentDanmakuOutput } from "../danmaku/agent-output.js";
 import { toAgentCommentsOutput } from "../comments/agent-output.js";
@@ -44,6 +45,10 @@ const TOOL_MAP: Record<string, { functionName: string; run: ToolFunction; compac
   frames: {
     functionName: "getBilibiliFrames",
     run: getBilibiliFrames as ToolFunction,
+  },
+  "search-videos": {
+    functionName: "searchBilibiliVideos",
+    run: searchBilibiliVideos as ToolFunction,
   },
 };
 

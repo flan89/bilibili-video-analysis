@@ -9,7 +9,7 @@ import { beforeAll, describe, expect, it } from "vitest";
  *  1. 未知 tool 名 -> 退出码 2 + USAGE 输出
  *  2. 缺 input JSON -> 退出码 2 + 错误信息
  *  3. 非法 JSON -> 退出码 2 + 错误信息
- *  4. USAGE 列出 6 个 tool
+ *  4. USAGE 列出 7 个 tool (M7 新增 search-videos)
  *
  * 跑真实 Tool 涉及 B 站 API, 这里不调 Tool, 只测 CLI 路由.
  */
@@ -58,7 +58,7 @@ describe("统一 Runtime CLI (tool 子命令)", () => {
     expect(stderr).toContain("invalid JSON input");
   });
 
-  it("USAGE 列出 6 个 tool", () => {
+  it("USAGE 列出 7 个 tool", () => {
     const { stderr } = runCli(["tool", "metadata"]);
     expect(stderr).toContain("metadata");
     expect(stderr).toContain("subtitle");
@@ -66,12 +66,14 @@ describe("统一 Runtime CLI (tool 子命令)", () => {
     expect(stderr).toContain("comments");
     expect(stderr).toContain("comment-replies");
     expect(stderr).toContain("frames");
+    expect(stderr).toContain("search-videos");
     expect(stderr).toContain("getBilibiliMetadata");
     expect(stderr).toContain("getBilibiliSubtitle");
     expect(stderr).toContain("getBilibiliDanmaku");
     expect(stderr).toContain("getBilibiliComments");
     expect(stderr).toContain("getBilibiliCommentReplies");
     expect(stderr).toContain("getBilibiliFrames");
+    expect(stderr).toContain("searchBilibiliVideos");
   });
 
   it("未知顶层命令 -> 退出码 2 + USAGE 列出 commands", () => {
