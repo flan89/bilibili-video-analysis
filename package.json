@@ -20,6 +20,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run tests/unit",
     "test:unit": "vitest run tests/unit",
+    "test:python-contract": "python3 -m unittest discover -s tests/python -p 'test_*.py'",
     "test:integration": "vitest run tests/integration --no-file-parallelism",
     "tool": "node dist/cli.mjs tool",
     "doctor": "node dist/cli.mjs doctor",

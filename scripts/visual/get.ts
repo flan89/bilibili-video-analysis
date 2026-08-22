@@ -8,7 +8,7 @@
  *
  * 内部流程:
  *   resolve video → metadata → select page → resolvePlayUrl (qn=64 默认)
- *     → durl 单文件下载 (匿名) 或 DASH 拼装 (qn=80 需登录)
+ *     → durl or complete DASH m4s download
  *     → ffprobe duration
  *     → 按 mode 调 frame-extractor (或先调 scene-detector)
  *     → 返回 FrameSet (含 visualChanges 完整时间轴)
@@ -27,7 +27,7 @@
  *   - Agent 自己读本地 jpg (本机 / sandbox 申请权限)
  */
 import { VideoRefSchema } from "../models/video.js";
-import { mkdir, stat, writeFile } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { createWriteStream } from "node:fs";
 import { dirname, join } from "node:path";
 import { Readable } from "node:stream";
@@ -71,11 +71,6 @@ import {
 } from "./frame-extractor.js";
 import { detectVisualChanges, SceneDetectionError } from "./scene-detector.js";
 import { probeMedia } from "./media-probe.js";
-import {
-  concatDashSegment,
-  DashConcatError,
-  FfmpegUnavailableError as DashFfmpegUnavailableError,
-} from "./dash-concat.js";
 import { cachePaths } from "../lib/paths.js";
 import { makeSetupHint } from "../lib/setup-hint.js";
 
@@ -477,7 +472,7 @@ export async function getBilibiliFrames(
     } catch (error) {
       const normalized = toBilibiliError(error);
       return fail({
-          videoUrl: resolvedInput.canonicalUrl,
+        videoUrl: resolvedInput.canonicalUrl,
         bvid: metadata.bvid,
         cid,
         requestedAt,
@@ -487,6 +482,9 @@ export async function getBilibiliFrames(
       });
     }
   }
+  const qualityWarning = stream.quality < requestedQuality
+    ? `请求 ${input.resolution}（清晰度代码 ${requestedQuality}），但平台实际返回代码 ${stream.quality}；视觉证据已降级`
+    : undefined;
 
   // 7) 准备 download headers
   const downloadHeaders: Record<string, string> = {
@@ -504,7 +502,7 @@ export async function getBilibiliFrames(
   });
   const sourcePath = join(tempDir, videoKey, "source.mp4");
 
-  // 9) 下载视频源 (durl 优先, DASH 拼装 fallback)
+  // 9) Download one complete media source: durl first, then DASH m4s.
   let downloaded: DownloadedSource;
   try {
     downloaded = await downloadVideoSource({
@@ -513,33 +511,8 @@ export async function getBilibiliFrames(
       fetchImpl,
       headers: downloadHeaders,
       timeoutMs: downloadTimeoutMs,
-      ffmpegPath: dependencies.ffmpegPath,
     });
   } catch (error) {
-    if (error instanceof DashFfmpegUnavailableError) {
-      return fail({
-        videoUrl: resolvedInput.canonicalUrl,
-        bvid: metadata.bvid,
-        cid,
-        requestedAt,
-        reasonCode: FramesReasonCode.ffmpeg_unavailable,
-        message: `DASH 拼装需要 ffmpeg: ${error.message}`,
-        retryable: false,
-        videoKey,
-      });
-    }
-    if (error instanceof DashConcatError) {
-      return fail({
-          videoUrl: resolvedInput.canonicalUrl,
-        bvid: metadata.bvid,
-        cid,
-        requestedAt,
-        reasonCode: FramesReasonCode.playurl_prerequisite_failed,
-        message: `DASH 拼装失败: ${error.message}`,
-        retryable: error.exitCode >= 500,
-        videoKey,
-      });
-    }
     const normalized = toBilibiliError(error);
     return fail({
       videoUrl: resolvedInput.canonicalUrl,
@@ -571,13 +544,8 @@ export async function getBilibiliFrames(
     });
   }
 
-  // DASH Coverage Reference 校验.
-  // 旧实现用 ffprobe 测下载文件时长当 targetDurationSeconds, 但 DASH 只下 1 segment
-  // 拼装的 mp4 不完整, ffprobe 测到 3 分钟会当"目标视频应有时长"做 Coverage 判定,
-  // Agent 拿到的 coverage.complete=true 是基于错误的 reference.
-  //
-  // 正确做法: 用 metadata 拿到的 selected page duration 作 reference, 跟 downloaded.media
-  // duration 比对. DASH 拼装不全 → 标 partial + warning.
+  // Compare downloaded DASH duration with the selected page duration from metadata.
+  // A meaningful shortage remains partial and makes coverage.complete=false.
   let mediaDurationShortageRatio: number | undefined;  // 1.0 = 100% 完整, < 1.0 = 缺
   let mediaCoverageWarning: string | undefined;
   const selectedPage = metadata.pages.find((p) => p.cid === cid);
@@ -591,9 +559,9 @@ export async function getBilibiliFrames(
     if (mediaDurationShortageRatio < 0.95) {
       // 缺超过 5% → 标 partial + warning
       mediaCoverageWarning =
-        `DASH 拼装媒体时长 ${targetDurationSeconds.toFixed(1)}s 远低于 metadata page 时长 ${expectedDurationSeconds.toFixed(1)}s ` +
-        `(覆盖率 ${(mediaDurationShortageRatio * 100).toFixed(1)}%, Coverage Reference 错误). ` +
-        `Agent 看完整片结论前必须意识到: 视觉证据只覆盖前 ${(mediaDurationShortageRatio * 100).toFixed(0)}%`;
+        `DASH 媒体时长 ${targetDurationSeconds.toFixed(1)} 秒，低于视频分P时长 ${expectedDurationSeconds.toFixed(1)} 秒` +
+        `（实际覆盖约 ${(mediaDurationShortageRatio * 100).toFixed(1)}%）。` +
+        `视觉证据可能只覆盖前 ${(mediaDurationShortageRatio * 100).toFixed(0)}%，不能据此形成全片结论`;
     }
   }
 
@@ -628,7 +596,7 @@ export async function getBilibiliFrames(
     await cleanupVideoTemp(videoKey, tempDir);
     if (error instanceof FFmpegUnavailableError) {
       return fail({
-          videoUrl: resolvedInput.canonicalUrl,
+        videoUrl: resolvedInput.canonicalUrl,
         bvid: metadata.bvid,
         cid,
         requestedAt,
@@ -639,7 +607,7 @@ export async function getBilibiliFrames(
     }
     if (error instanceof SceneDetectionError) {
       return fail({
-          videoUrl: resolvedInput.canonicalUrl,
+        videoUrl: resolvedInput.canonicalUrl,
         bvid: metadata.bvid,
         cid,
         requestedAt,
@@ -650,7 +618,7 @@ export async function getBilibiliFrames(
     }
     if (error instanceof FrameExtractionError) {
       return fail({
-          videoUrl: resolvedInput.canonicalUrl,
+        videoUrl: resolvedInput.canonicalUrl,
         bvid: metadata.bvid,
         cid,
         requestedAt,
@@ -703,6 +671,11 @@ export async function getBilibiliFrames(
   let { warnings } = buildResult;
   let { acquisitionStatus } = buildResult;
 
+  if (qualityWarning) {
+    warnings.push(qualityWarning);
+    if (acquisitionStatus === "success") acquisitionStatus = "partial";
+  }
+
   // DASH 媒体时长不达标时, 显式 partial + 警告 + 暴露覆盖率
   if (mediaCoverageWarning) {
     warnings.push(mediaCoverageWarning);
@@ -712,6 +685,8 @@ export async function getBilibiliFrames(
     }
     coverage = {
       ...coverage,
+      complete: false,
+      targetDurationSeconds: expectedDurationSeconds ?? coverage.targetDurationSeconds,
       // 把"真实覆盖率"显式写入 coverage, Agent 直接读这个字段判断
       mediaDurationShortageRatio,
       expectedDurationSeconds,
@@ -766,6 +741,7 @@ export async function getBilibiliFrames(
     outcome: "success",
     video: { bvid: metadata.bvid, cid },
     frameset,
+    acquisition: frameset.acquisition,
   });
 }
 
@@ -821,11 +797,10 @@ interface DownloadSourceArgs {
   fetchImpl: typeof fetch;
   headers: Record<string, string>;
   timeoutMs: number;
-  ffmpegPath?: string;
 }
 
 async function downloadVideoSource(args: DownloadSourceArgs): Promise<DownloadedSource> {
-  const { stream, sourcePath, fetchImpl, headers, timeoutMs, ffmpegPath } = args;
+  const { stream, sourcePath, fetchImpl, headers, timeoutMs } = args;
 
   // 优先 durl 单文件 (老视频 / 匿名 720P)
   if (stream.durlUrls && stream.durlUrls.length === 1 && stream.durlUrls[0]) {
@@ -848,33 +823,16 @@ async function downloadVideoSource(args: DownloadSourceArgs): Promise<Downloaded
     });
   }
 
-  // DASH 模式: 拼 init 段 + 第一个 segment
-  if (stream.videoInit) {
-    const segPath = `${sourcePath}.seg.m4s`;
-    const segResp = await fetchImpl(stream.videoBaseUrl, { headers });
-    if (!segResp.ok) {
-      throw new BilibiliError({
-        code: "playurl_http_error",
-        message: `DASH segment 下载 HTTP ${segResp.status}`,
-        httpStatus: segResp.status,
-        retryable: segResp.status >= 500 || segResp.status === 429,
-      });
-    }
-    if (!segResp.body) {
-      throw new BilibiliError({
-        code: "playurl_http_error",
-        message: "DASH segment 响应无 body",
-        retryable: true,
-      });
-    }
-    const buffer = Buffer.from(await segResp.arrayBuffer());
-    await mkdir(dirname(sourcePath), { recursive: true });
-    await writeFile(segPath, buffer);
-
-    // 拼 init + seg → mp4
-    await concatDashSegment(stream.videoInit, segPath, sourcePath, ffmpegPath);
-    const segSize = (await stat(sourcePath).catch(() => ({ size: 0 }))).size;
-    return { sourcePath, sizeBytes: segSize, kind: "dash", actualQuality: stream.quality };
+  // DASH baseUrl points to the complete m4s media file; SegmentBase fields are byte ranges.
+  if ((!stream.durlUrls || stream.durlUrls.length === 0) && stream.videoBaseUrl) {
+    const { size } = await downloadToFileStream({
+      url: stream.videoBaseUrl,
+      destPath: sourcePath,
+      fetchImpl,
+      headers,
+      timeoutMs,
+    });
+    return { sourcePath, sizeBytes: size, kind: "dash", actualQuality: stream.quality };
   }
 
   throw new BilibiliError({
@@ -1108,7 +1066,12 @@ function fail(options: FailOptions): GetFramesOutput {
         cid: options.cid,
         videoKey: options.videoKey,
       },
-      }),
+    }),
+    error: {
+      code: options.reasonCode,
+      message: options.message,
+      retryable: options.retryable ?? false,
+    },
     setupHint: options.reasonCode === FramesReasonCode.ffmpeg_unavailable
       ? makeSetupHint("media", "抽帧需要 ffmpeg，但当前环境不可用")
       : undefined,

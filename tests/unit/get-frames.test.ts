@@ -9,8 +9,7 @@
  * - 未知 page / cid → 结构化失败
  * - metadata 接口失败 → frames Tool 失败
  * - playurl 失败 → playurl_prerequisite_failed
- * - DASH 拼装失败 → playurl_prerequisite_failed
- * - DASH 拼装缺少 ffmpeg → ffmpeg_unavailable
+ * - DASH 完整媒体下载与时长不足处理
  * - frame_extraction 失败 → frame_extraction_failed
  * - ffmpeg 不可用 → ffmpeg_unavailable
  *
@@ -41,11 +40,6 @@ import {
 import { detectVisualChanges } from "../../scripts/visual/scene-detector.js";
 import { probeMedia } from "../../scripts/visual/media-probe.js";
 import { getBilibiliFrames } from "../../scripts/visual/get.js";
-import {
-  concatDashSegment,
-  DashConcatError,
-  FfmpegUnavailableError as DashFfmpegUnavailableError,
-} from "../../scripts/visual/dash-concat.js";
 import { FrameSchema } from "../../scripts/models/frame.js";
 
 vi.mock("../../scripts/bilibili/playurl.js", async () => {
@@ -92,15 +86,6 @@ vi.mock("../../scripts/visual/media-probe.js", async () => {
   };
 });
 
-vi.mock("../../scripts/visual/dash-concat.js", async () => {
-  const actual = await vi.importActual<typeof import("../../scripts/visual/dash-concat.js")>(
-    "../../scripts/visual/dash-concat.js",
-  );
-  return {
-    ...actual,
-    concatDashSegment: vi.fn(),
-  };
-});
 
 function fixture(name: string): unknown {
   const url = new URL(`../fixtures/${name}`, import.meta.url);
@@ -199,7 +184,7 @@ function mockStreamDashOnly() {
     videoWidth: 1920,
     videoHeight: 1080,
     acceptQuality: [80, 64, 32, 16],
-    // durlUrls 缺失 → 走 DASH fallback, 报 not supported
+    // durlUrls 缺失时走 DASH 完整媒体地址。
   };
 }
 
@@ -213,7 +198,6 @@ beforeEach(async () => {
   vi.mocked(extractScene).mockReset();
   vi.mocked(detectVisualChanges).mockReset();
   vi.mocked(probeMedia).mockReset();
-  vi.mocked(concatDashSegment).mockReset();
   // 默认 probe 成功
   vi.mocked(probeMedia).mockResolvedValue({
     durationSeconds: 2055,
@@ -525,38 +509,70 @@ describe("getBilibiliFrames — 错误路径", () => {
     expect(result.reasonCode).toBe("playurl_prerequisite_failed");
   });
 
-  it("DASH 拼装失败 → playurl_prerequisite_failed", async () => {
+  it("downloads the complete DASH media URL without rebuilding SegmentBase", async () => {
+    const videoKey = makeVideoKey({
+      bvid: "BV15wGR6CEhY", cid: "3001002001", quality: 80, resolution: "720p",
+    });
     vi.mocked(resolvePlayUrl).mockResolvedValue(mockStreamDashOnly());
-    vi.mocked(concatDashSegment).mockRejectedValue(
-      new DashConcatError("模拟 DASH 拼装失败", "mock stderr", 1),
-    );
-    const fetchImpl = vi.fn(async () => new Response("fake", { status: 200 })) as unknown as typeof fetch;
+    vi.mocked(extractTimestamps).mockResolvedValue([makeMockFrame(videoKey, 1)]);
+    const fetchImpl = vi.fn(async () => new Response("complete-m4s", { status: 200 })) as unknown as typeof fetch;
+
     const result = await getBilibiliFrames(
       { video: "BV1xx411c7mD", mode: "timestamp", timestamps: [1] },
       { client: new FramesFixtureClient(), fetchImpl, tempDir: scratch, skipTempCleanup: true },
     );
 
-    expect(result.success).toBe(false);
-    expect(result.reasonCode).toBe("playurl_prerequisite_failed");
-    expect(result.message).toMatch(/DASH/);
+    expect(result.success).toBe(true);
+    expect(result.frameset?.metadata?.streamInfo).toMatchObject({ quality: 80 });
+    expect(fetchImpl).toHaveBeenCalledOnce();
   });
 
-  it("DASH 拼装缺少 ffmpeg → ffmpeg_unavailable", async () => {
+  it("marks DASH duration shortage as partial and incomplete", async () => {
+    const videoKey = makeVideoKey({
+      bvid: "BV15wGR6CEhY", cid: "3001002001", quality: 80, resolution: "720p",
+    });
     vi.mocked(resolvePlayUrl).mockResolvedValue(mockStreamDashOnly());
-    vi.mocked(concatDashSegment).mockRejectedValue(
-      new DashFfmpegUnavailableError("ffmpeg 不可用: ffmpeg"),
-    );
-    const fetchImpl = vi.fn(async () => new Response("fake", { status: 200 })) as unknown as typeof fetch;
+    vi.mocked(probeMedia).mockResolvedValue({
+      durationSeconds: 100,
+      video: { codec: "h264", width: 1280, height: 720, fps: 30 },
+      audio: undefined,
+    });
+    vi.mocked(extractTimestamps).mockResolvedValue([makeMockFrame(videoKey, 1)]);
+    const fetchImpl = vi.fn(async () => new Response("partial-m4s", { status: 200 })) as unknown as typeof fetch;
+
     const result = await getBilibiliFrames(
       { video: "BV1xx411c7mD", mode: "timestamp", timestamps: [1] },
       { client: new FramesFixtureClient(), fetchImpl, tempDir: scratch, skipTempCleanup: true },
     );
 
-    expect(result.success).toBe(false);
-    expect(result.reasonCode).toBe("ffmpeg_unavailable");
-    expect(result.message).toMatch(/DASH.*ffmpeg/);
-    expect(result.setupHint?.capability).toBe("media");
+    expect(result.success).toBe(true);
+    expect(result.frameset?.acquisition.status).toBe("partial");
+    expect(result.frameset?.coverage.complete).toBe(false);
+    expect(result.frameset?.coverage.targetDurationSeconds).toBe(2020);
+    expect(result.frameset?.coverage.mediaDurationShortageRatio).toBeCloseTo(100 / 2020);
   });
+
+  it("reports requested quality downgrade as partial", async () => {
+    const stream = mockStreamDurl({ quality: 64 });
+    stream.acceptQuality = [64, 32, 16];
+    vi.mocked(resolvePlayUrl).mockResolvedValue(stream);
+    const videoKey = makeVideoKey({
+      bvid: "BV15wGR6CEhY", cid: "3001002001", quality: 64, resolution: "1080p",
+    });
+    vi.mocked(extractTimestamps).mockResolvedValue([makeMockFrame(videoKey, 1)]);
+    const fetchImpl = vi.fn(async () => new Response("video", { status: 200 })) as unknown as typeof fetch;
+
+    const result = await getBilibiliFrames(
+      { video: "BV1xx411c7mD", mode: "timestamp", timestamps: [1], resolution: "1080p" },
+      { client: new FramesFixtureClient(), fetchImpl, tempDir: scratch, skipTempCleanup: true },
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.frameset?.acquisition.status).toBe("partial");
+    expect(result.frameset?.warnings.join("\n")).toContain("清晰度代码 80");
+    expect(result.frameset?.warnings.join("\n")).toContain("实际返回代码 64");
+  });
+
 
   it("frame extraction 抛 FrameExtractionError → frame_extraction_failed", async () => {
     vi.mocked(resolvePlayUrl).mockResolvedValue(mockStreamDurl());

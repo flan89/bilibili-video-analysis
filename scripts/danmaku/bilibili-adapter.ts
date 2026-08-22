@@ -128,6 +128,10 @@ export async function discoverDanmakuSegments(
       `${itemTruncatedSegments} 个段内部 item 被 SEGMENT_ITEM_LIMIT (${SEGMENT_ITEM_LIMIT}) 截断, 完整度下降`,
     );
   }
+  const droppedInvalidCount = Number(normalized.metadata?.droppedInvalidCount ?? 0);
+  if (droppedInvalidCount > 0) {
+    warnings.push(`有 ${droppedInvalidCount} 条弹幕缺少播放时间，已丢弃；数据覆盖不完整`);
+  }
 
   return {
     danmaku: DanmakuSchema.parse(normalized),

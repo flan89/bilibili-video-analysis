@@ -83,13 +83,17 @@ root
 replies[]
 page: { num, size, count }
 totalReported?
-complete?
+lastPageReached?
+hasMore?
+complete?                 # 兼容字段，仅在第 1 页已含完整线程时为 true
 nextReplyPage?
 acquisition
 error?
 ```
 
-`complete` 表示**根评论这一层的回复分页是否完整**。
+`lastPageReached` 只表示平台确认“当前返回的是最后一页”，不表示此前页面已经被本次无状态调用取得。`hasMore` 与它含义相反。
+
+兼容字段 `complete=true` 只在第 1 页已经包含平台报告的全部回复时成立。直接请求第 2 页，即使 `lastPageReached=true`，也不能据此宣称整个回复线程完整。
 
 单条 `Comment.repliesComplete` 只描述该 Comment 自己的 `replies[]` 是否完整，不能用来代替整个 root thread 的分页 Coverage。
 

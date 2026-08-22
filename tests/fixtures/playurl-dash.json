@@ -1,0 +1,45 @@
+{
+  "code": 0,
+  "message": "OK",
+  "data": {
+    "quality": 64,
+    "accept_quality": [64, 32, 16],
+    "dash": {
+      "duration": 2056,
+      "video": [
+        {
+          "id": 64,
+          "baseUrl": "https://example.com/video.m4s",
+          "mimeType": "video/mp4",
+          "codecs": "avc1.64001E",
+          "width": 1280,
+          "height": 720,
+          "SegmentBase": {
+            "Initialization": "0-1021",
+            "indexRange": "1022-5985"
+          },
+          "segment_base": {
+            "initialization": "0-1021",
+            "index_range": "1022-5985"
+          }
+        }
+      ],
+      "audio": [
+        {
+          "id": 30216,
+          "baseUrl": "https://example.com/audio.m4s",
+          "mimeType": "audio/mp4",
+          "codecs": "mp4a.40.2",
+          "SegmentBase": {
+            "Initialization": "0-932",
+            "indexRange": "933-5908"
+          },
+          "segment_base": {
+            "initialization": "0-932",
+            "index_range": "933-5908"
+          }
+        }
+      ]
+    }
+  }
+}

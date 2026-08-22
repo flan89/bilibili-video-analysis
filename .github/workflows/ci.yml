@@ -39,5 +39,8 @@ jobs:
       - name: 离线单元测试
         run: npm test
 
+      - name: Python ASR 契约测试
+        run: npm run test:python-contract
+
       - name: 发布物验收
         run: npm run test:release

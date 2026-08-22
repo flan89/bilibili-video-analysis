@@ -39,12 +39,19 @@ import { WbiSigner } from "./wbi.js";
  *   - data.dash.duration: 视频总时长 (秒)
  *   - data.dash.video[]: 视频流 (可能有多个清晰度)
  *   - data.dash.audio[]: 音频流
- *   - data.dash.video[i].baseUrl / base_url: m4s 分片 base URL
- *   - data.dash.video[i].segment_base.Initialization: 视频头段 (base64)
+ *   - data.dash.video[i].baseUrl / base_url: 完整 m4s 媒体地址
+ *   - data.dash.video[i].SegmentBase: byte ranges such as 0-1021, not Base64 content
  *
  * B 站历史包袱: baseUrl 字段有时是 baseUrl, 有时是 base_url (老接口),
  * 两个都接受 (z.union / 可选).
  */
+const SegmentBaseSchema = z.object({
+  Initialization: z.string().optional(),
+  initialization: z.string().optional(),
+  indexRange: z.string().optional(),
+  index_range: z.string().optional(),
+});
+
 export const PlayUrlDashSchema = z.object({
   code: z.number(),
   message: z.string().default(""),
@@ -80,12 +87,8 @@ export const PlayUrlDashSchema = z.object({
               frameRate: z.string().optional(),
               sar: z.string().optional(),
               startWithSap: z.number().optional(),
-              segment_base: z
-                .object({
-                  Initialization: z.string(),
-                  indexRange: z.string().optional(),
-                })
-                .optional(),
+              segment_base: SegmentBaseSchema.optional(),
+              SegmentBase: SegmentBaseSchema.optional(),
               codecid: z.number().optional(),
               bandwidth: z.number().optional(),
             })
@@ -103,12 +106,8 @@ export const PlayUrlDashSchema = z.object({
                 base_url: z.string().optional(),
                 mimeType: z.string().optional(),
                 codecs: z.string().optional(),
-                segment_base: z
-                  .object({
-                    Initialization: z.string(),
-                    indexRange: z.string().optional(),
-                  })
-                  .optional(),
+                segment_base: SegmentBaseSchema.optional(),
+                SegmentBase: SegmentBaseSchema.optional(),
                 bandwidth: z.number().optional(),
               })
               .refine(
@@ -174,9 +173,9 @@ export interface VideoStreamInfo {
   quality: number;
   /** 视频总时长 (秒). */
   durationSeconds: number;
-  /** 视频流 baseUrl (m4s 分片模板). */
+  /** 视频流 baseUrl（完整 m4s 媒体地址）. */
   videoBaseUrl: string;
-  /** 视频头段 (base64 encoded). ffmpeg 提帧需要这个. */
+  /** DASH initialization byte range, for example 0-1021. */
   videoInit: string;
   /** 视频 MIME type (例: video/mp4). */
   videoMimeType: string;
@@ -192,7 +191,7 @@ export interface VideoStreamInfo {
   videoSegmentIndexRange?: string;
   /** 音频流 baseUrl. M2 ASR 用. */
   audioBaseUrl?: string;
-  /** 音频头段 (base64 encoded). */
+  /** DASH audio initialization byte range, not Base64 content. */
   audioInit?: string;
   /** 音频 MIME type. */
   audioMimeType?: string;
@@ -363,13 +362,14 @@ export async function resolvePlayUrl(
       });
     }
     videoBaseUrl = video.baseUrl ?? video.base_url ?? "";
-    videoInit = video.segment_base?.Initialization ?? "";
+    const videoSegmentBase = video.SegmentBase ?? video.segment_base;
+    videoInit = videoSegmentBase?.Initialization ?? videoSegmentBase?.initialization ?? "";
     videoMimeType = video.mimeType ?? "video/mp4";
     videoCodecs = video.codecs ?? "avc1.64001F";
     videoWidth = video.width;
     videoHeight = video.height;
     videoBandwidth = video.bandwidth;
-    videoSegmentIndexRange = video.segment_base?.indexRange;
+    videoSegmentIndexRange = videoSegmentBase?.indexRange ?? videoSegmentBase?.index_range;
   } else {
     // durl 模式 (老视频, 单文件 mp4)
     if (!durlData || durlData.length === 0 || !durlData[0]) {
@@ -397,7 +397,8 @@ export async function resolvePlayUrl(
   // DASH 模式才有 audio; durl 老视频没有 DASH audio
   const audio = dashData?.audio[0];
   const audioBaseUrl = audio?.baseUrl ?? audio?.base_url;
-  const audioInit = audio?.segment_base?.Initialization;
+  const audioSegmentBase = audio?.SegmentBase ?? audio?.segment_base;
+  const audioInit = audioSegmentBase?.Initialization ?? audioSegmentBase?.initialization;
 
   return {
     quality: env.data.quality,

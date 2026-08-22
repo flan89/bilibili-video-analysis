@@ -62,17 +62,7 @@ export const GetCommentRepliesOutputSchema = z.object({
   }).optional(),
   /** B 站报告的回复总数 (= page.count). */
   totalReported: z.number().int().optional(),
-  /**
-   * 改名为 lastPageReached, 严格基于 B 站 cursor.is_end 字段.
-   * 旧 complete 公式 (pageNum-1)*pageSize+len >= pageCount 把"最后一页"误当
-   * "线程完整", 无状态 Tool 直接 page=2 拿后 10 条会误判 complete=true.
-   *
-   * 严格语义: B 站说 is_end=true, 才是最后一页. Agent 想判断"线程完整"
-   * 必须自己累积多页 + 跟 totalReported 比对.
-   *
-   * 保留 complete 字段 (deprecated) 兼容老 fixture / 旧 Agent 调用, 内容跟
-   * lastPageReached 相同. 后续 V1+ 移除.
-   */
+  /** Whether Bilibili reports that the returned page is the last page. */
   lastPageReached: z.boolean().optional(),
   /**
    * 新增 hasMore, 跟 lastPageReached 互补. Agent 写代码时更直观.
@@ -80,10 +70,7 @@ export const GetCommentRepliesOutputSchema = z.object({
   hasMore: z.boolean().optional(),
   /** 下一页页码; lastPageReached=true 时 undefined. */
   nextReplyPage: z.number().int().optional(),
-  /**
-   * 当前 thread 是否已完整 (deprecated, 跟 lastPageReached 同值,
-   * 后续 V1+ 移除).
-   */
+  /** True only when page 1 contains the whole reported thread. Deprecated. */
   complete: z.boolean().optional(),
   acquisition: AcquisitionRecordSchema,
   error: CommentRepliesToolErrorSchema.optional(),
@@ -94,6 +81,18 @@ export interface GetCommentRepliesDependencies {
   client?: BilibiliSubtitleClient;
   signer?: WbiSigner;
   cookie?: string;
+}
+
+/** A stateless page is complete only when page 1 already contains the whole thread. */
+export function isReplyThreadComplete(thread: {
+  page: { num: number };
+  replies: readonly Comment[];
+  totalReported: number;
+  lastPageReached: boolean;
+}): boolean {
+  return thread.page.num === 1
+    && thread.lastPageReached
+    && thread.replies.length >= thread.totalReported;
 }
 
 /**
@@ -192,6 +191,7 @@ export async function getBilibiliCommentReplies(
       },
     );
     const normalized = normalizeReplyThread(raw, input.root, { aid });
+    const complete = isReplyThreadComplete(normalized);
 
     const acquisition = makeAcquisition({
       status: "success",
@@ -224,7 +224,7 @@ export async function getBilibiliCommentReplies(
       lastPageReached: normalized.lastPageReached,
       hasMore: normalized.hasMore,
       // 兼容老 fixture / 旧 Agent (deprecated, 后续 V1+ 移除)
-      complete: normalized.lastPageReached,
+      complete,
       ...(normalized.nextPage !== undefined ? { nextReplyPage: normalized.nextPage } : {}),
       acquisition,
     });

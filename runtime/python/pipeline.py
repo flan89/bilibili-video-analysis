@@ -61,6 +61,27 @@ def emit(success: bool, transcript: dict | None, acquisition: dict) -> None:
     print(json.dumps(output, ensure_ascii=False))
 
 
+def classify_normalized_segments(
+    segments: list[dict],
+    runner_warnings: list[str],
+) -> tuple[str, bool]:
+    """根据标准化后的时间字段返回 ``(status, complete)``。"""
+    if not segments:
+        return "missing", False
+
+    fallback_segment = (
+        len(segments) == 1
+        and segments[0].get("startSeconds") == 0
+        and segments[0].get("endSeconds") == 0
+    )
+    filtered_short_segments = any(
+        warning.startswith("asr_vad_filtered_short_segments:")
+        for warning in runner_warnings
+    )
+    complete = not fallback_segment and not filtered_short_segments
+    return ("success" if complete else "partial"), complete
+
+
 def main() -> int:
     if len(sys.argv) < 3:
         print("用法: python3 scripts/subtitle/asr/pipeline.py <BV号> <cid>", file=sys.stderr)
@@ -131,14 +152,6 @@ def main() -> int:
         })
         return 1
 
-    # complete 判定改为"时间锚点可信"逻辑
-    # 整段 ASR fallback (asr-runner.py L101-110) 会产出 from=0, to=0 单段, 这种段没有真实时间锚点
-    raw_segments = normalized.get("segments", [])
-    fallback_segment = any(
-        s.get("from_ms", 0) == 0 and s.get("to_ms", 0) == 0
-        for s in raw_segments
-    )
-
     # 收集 asr-runner 写出的 warnings (Python 内部状态不再丢失)
     # 例如整段 fallback 时 asr-runner 已经标记 warning
     runner_warnings_path = PROJECT_ROOT / "data" / "raw" / f"{video_key}.c_audio.asr.warnings.json"
@@ -149,21 +162,34 @@ def main() -> int:
         except (json.JSONDecodeError, OSError):
             pass  # warnings 文件读失败不阻塞, 透传空 list
 
-    if fallback_segment and len(raw_segments) <= 1:
-        # 整段 fallback: 时间锚点全在 00:00, complete 必为 false
-        # 不再谎称 success+complete=true
-        status = "partial"
-        pipeline_warnings = runner_warnings
-    else:
-        status = "success"
-        pipeline_warnings = runner_warnings
+    raw_segments = normalized.get("segments", [])
+    if not isinstance(raw_segments, list):
+        emit(False, None, {
+            "status": "failed",
+            "source": "funasr",
+            "reasonCode": "asr_transcript_invalid_segments",
+            "message": "ASR segments 不是数组",
+            "warnings": runner_warnings,
+        })
+        return 1
+
+    status, complete = classify_normalized_segments(raw_segments, runner_warnings)
+    if status == "missing":
+        emit(False, None, {
+            "status": "missing",
+            "source": "funasr",
+            "reasonCode": "asr_empty_transcript",
+            "message": "ASR 未生成任何可用片段",
+            "warnings": runner_warnings,
+        })
+        return 0
 
     transcript = {
         "source": "asr",
         "language": normalized.get("language", "zh-CN"),
         "provider": "funasr",
         "segments": raw_segments,
-        "complete": not (fallback_segment and len(raw_segments) <= 1),
+        "complete": complete,
     }
     transcript["cid"] = cid
 
@@ -181,7 +207,7 @@ def main() -> int:
     emit(True, transcript, {
         "status": status,
         "source": "funasr",
-        "warnings": pipeline_warnings,
+        "warnings": runner_warnings,
     })
     return 0
 

@@ -344,6 +344,33 @@ describe("getBilibiliDanmaku", () => {
     expect(result.acquisition.warnings).toContain("segment 3: 拉取失败 - timeout");
   });
 
+  it("complete=false still yields partial when adapter warnings are empty", async () => {
+    vi.mocked(discoverDanmakuSegments).mockResolvedValue(
+      makeMockDiscoverResult({
+        warnings: [],
+        danmaku: {
+          source: "bilibili_danmaku",
+          language: "zh-CN",
+          cid: "3001002001",
+          provider: "bilibili_player_api",
+          segments: [],
+          total: 0,
+          segmentCount: 1,
+          complete: false,
+          metadata: { totalSegments: 1, droppedInvalidCount: 1 },
+        },
+      }),
+    );
+
+    const result = await getBilibiliDanmaku(
+      { video: "BV15wGR6CEhY" },
+      { client: new DanmakuFixtureClient() },
+    );
+
+    expect(result.acquisition.status).toBe("partial");
+    expect(result.danmaku?.complete).toBe(false);
+  });
+
   it("maxSegments 透传到 adapter", async () => {
     vi.mocked(discoverDanmakuSegments).mockResolvedValue(makeMockDiscoverResult());
 

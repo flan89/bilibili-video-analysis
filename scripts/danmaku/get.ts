@@ -259,10 +259,10 @@ export async function getBilibiliDanmaku(
 
     const danmaku = DanmakuSchema.parse(result.danmaku);
     const acquisition = makeAcquisition({
-      status: result.warnings.length > 0 ? "partial" : "success",
+      status: danmaku.complete && result.warnings.length === 0 ? "success" : "partial",
       source: "bilibili_player_api",
       requestedAt,
-      message: result.warnings.length > 0
+      message: !danmaku.complete || result.warnings.length > 0
         ? "弹幕获取成功, 但部分段拉取失败或被截断"
         : "弹幕获取成功",
       itemCount: danmaku.segments.length,

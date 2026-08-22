@@ -42,6 +42,8 @@ tmp/
 .env.local
 .env.*.local
 scripts/prototype/__pycache__/
+__pycache__/
+*.pyc
 temp_doc*.md
 
 # 本地开发约束与过程记录，不进入公开仓库

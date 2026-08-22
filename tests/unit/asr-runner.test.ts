@@ -106,6 +106,24 @@ const validFailureStdout = JSON.stringify({
   },
 });
 
+const validPartialStdout = JSON.stringify({
+  success: true,
+  transcript: {
+    source: "asr",
+    language: "zh-CN",
+    cid: "123",
+    segments: [
+      { id: "s1", startSeconds: 0, endSeconds: 0, text: "整段识别结果" },
+    ],
+    complete: false,
+  },
+  acquisition: {
+    status: "partial",
+    source: "funasr",
+    warnings: ["asr_vad_no_segments_detected: fallback"],
+  },
+});
+
 describe("runAsrTranscript", () => {
   beforeEach(() => {
     mockSpawn.mockReset();
@@ -155,6 +173,22 @@ describe("runAsrTranscript", () => {
     expect(result.transcript.segments).toHaveLength(1);
     expect(result.transcript.segments[0]?.text).toBe("测试");
     expect(result.acquisition.itemCount).toBe(1);
+  });
+
+  it("Python 返回 partial transcript 时保留正文和不完整状态", async () => {
+    mockSpawn.mockReturnValue(makeChildProcess({
+      stdout: validPartialStdout,
+      stderr: "",
+      exitCode: 0,
+    }) as never);
+
+    const result = await runAsrTranscript({ bvid: "BV1test", cid: "123" });
+
+    expect(result.acquisition.status).toBe("partial");
+    expect(result.transcript.complete).toBe(false);
+    expect(result.transcript.segments).toHaveLength(1);
+    expect(result.acquisition.warnings).toContain("asr_vad_no_segments_detected: fallback");
+    expect(mockWriteTranscriptCache).toHaveBeenCalledOnce();
   });
 
   it("Python 退出 0 但 stdout 是 failure JSON (ASR pipeline 自身失败)", async () => {

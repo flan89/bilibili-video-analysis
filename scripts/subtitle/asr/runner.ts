@@ -63,7 +63,8 @@ const AsrPipelineOutputSchema = z.discriminatedUnion("success", [
     success: z.literal(true),
     transcript: TranscriptSchema,
     acquisition: z.object({
-      status: z.literal("success"),
+      /** 整段回退或过滤过短语音时，保留可用但不完整的 Transcript。 */
+      status: z.enum(["success", "partial"]),
       source: z.literal("funasr"),
       warnings: z.array(z.string()).default([]),
     }),
@@ -72,7 +73,7 @@ const AsrPipelineOutputSchema = z.discriminatedUnion("success", [
     success: z.literal(false),
     transcript: z.null(),
     acquisition: z.object({
-      status: z.enum(["partial", "missing", "failed"]),
+      status: z.enum(["missing", "failed"]),
       source: z.literal("funasr"),
       reasonCode: z.string(),
       message: z.string(),

@@ -6,5 +6,4 @@ export * from "./model.js";
 export * from "./media-probe.js";
 export * from "./frame-extractor.js";
 export * from "./scene-detector.js";
-export * from "./dash-concat.js";
 export * from "./get.js";

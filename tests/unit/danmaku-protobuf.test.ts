@@ -337,6 +337,8 @@ describe("adapter: normalizeDanmakuReply", () => {
     );
     expect(result.segments).toHaveLength(1);
     expect(result.segments[0]?.text).toBe("ok");
+    expect(result.complete).toBe(false);
+    expect(result.metadata?.droppedInvalidCount).toBe(1);
     expect(result.total).toBe(1); // 跳过的不计 total
   });
 

@@ -30,6 +30,7 @@ import {
   wrapMainRepliesAsCollection,
 } from "../../scripts/comments/bilibili-adapter.js";
 import { WbiSigner } from "../../scripts/bilibili/wbi.js";
+import { isReplyThreadComplete } from "../../scripts/comments/get-replies.js";
 
 function fixture(name: string): unknown {
   const url = new URL(`../fixtures/${name}`, import.meta.url);
@@ -261,6 +262,39 @@ describe("wrapMainRepliesAsCollection", () => {
     expect(collection.complete).toBe(false);
     expect(collection.samplingStrategy).toContain("wbi_main_hot");
     expect(collection.totalReported).toBeGreaterThan(0);
+  });
+
+  it("keeps totalReported unknown when the platform omits all_count", () => {
+    const decoded = decodeMainReplies({
+      code: 0,
+      data: { replies: [{ rpid: "1", content: { message: "sample" } }] },
+    });
+    const normalized = normalizeMainReplies(decoded, "2");
+    const collection = wrapMainRepliesAsCollection(normalized, "hot");
+
+    expect(normalized.allCount).toBeUndefined();
+    expect(collection.totalReported).toBeUndefined();
+    expect(collection.complete).toBe(false);
+  });
+});
+
+describe("isReplyThreadComplete", () => {
+  it("does not treat a directly requested last page as the complete thread", () => {
+    expect(isReplyThreadComplete({
+      page: { num: 2 },
+      replies: [{ id: "21" }] as never,
+      totalReported: 1,
+      lastPageReached: true,
+    })).toBe(false);
+  });
+
+  it("accepts page 1 only when it contains the reported whole thread", () => {
+    expect(isReplyThreadComplete({
+      page: { num: 1 },
+      replies: [{ id: "1" }, { id: "2" }] as never,
+      totalReported: 2,
+      lastPageReached: true,
+    })).toBe(true);
   });
 });
 

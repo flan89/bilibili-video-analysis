@@ -138,7 +138,7 @@ export interface NormalizedMainReplies {
   /** 是否已加载全部根评论. */
   complete: boolean;
   /** B 站报告的总评论数 (含已删); 不等于 comments.length. */
-  allCount: number;
+  allCount: number | undefined;
   /** 排序方式 (3 = 热度, 2 = 时间). */
   mode: number;
 }
@@ -165,7 +165,7 @@ export function normalizeMainReplies(
     // 严格 === true 才认为 complete. cursor 缺失 / API 字段变化 / 风控触发
     // 等情况不再错误地默认 complete=true, 避免 Agent 误判 Coverage 后写错总体结论.
     complete: cursor?.is_end === true,
-    allCount: cursor?.all_count ?? comments.length,
+    allCount: cursor?.all_count,
     mode: cursor?.mode ?? 3,
   };
 }
