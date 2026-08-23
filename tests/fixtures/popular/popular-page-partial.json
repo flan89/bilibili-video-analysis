@@ -1,0 +1,54 @@
+{
+  "_comment": "热门列表个别条目异常场景: 4 条中 1 条缺 bvid, 1 条标题为空, 1 条结构异常 (title 非字符串); 只有 1 条可解析, Tool 应表现为 partial 并带 warnings, 不是 failed.",
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "list": [
+      {
+        "aid": 125000000000001,
+        "tid": 36,
+        "tname": "知识",
+        "pic": "http://i0.hdslb.com/bfs/archive/ok-item-cover.jpg",
+        "title": "正常条目: 十分钟看懂热门机制",
+        "pubdate": 1787300000,
+        "duration": 615,
+        "owner": { "mid": 111222333, "name": "知识区作者" },
+        "stat": { "view": 800000, "danmaku": 1200, "reply": 3400, "favorite": 50000, "coin": 60000, "share": 9000, "like": 90000 },
+        "bvid": "BV1aa8M6XEBt",
+        "is_ogv": false,
+        "rcmd_reason": { "content": "百万播放", "corner_mark": 1 }
+      },
+      {
+        "aid": 125000000000002,
+        "tid": 17,
+        "tname": "单机游戏",
+        "pic": "http://i0.hdslb.com/bfs/archive/no-bvid-cover.jpg",
+        "title": "缺 BV 号的条目",
+        "pubdate": 1787300100,
+        "duration": 400,
+        "owner": { "mid": 444555666, "name": "某作者" },
+        "is_ogv": false,
+        "rcmd_reason": { "content": "", "corner_mark": 0 }
+      },
+      {
+        "aid": 125000000000003,
+        "tid": 21,
+        "tname": "日常",
+        "pic": "http://i0.hdslb.com/bfs/archive/empty-title-cover.jpg",
+        "title": "   ",
+        "pubdate": 1787300200,
+        "duration": 200,
+        "owner": { "mid": 777888999, "name": "另一作者" },
+        "bvid": "BV1bb8M6XEBt",
+        "is_ogv": false
+      },
+      {
+        "aid": 125000000000004,
+        "title": ["结构异常: title 不是字符串"],
+        "bvid": "BV1cc8M6XEBt"
+      }
+    ],
+    "no_more": false
+  }
+}

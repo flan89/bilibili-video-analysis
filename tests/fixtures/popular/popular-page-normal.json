@@ -1,0 +1,124 @@
+{
+  "_comment": "基于 2026-08 真实热门接口响应取证 (x/web-interface/popular?ps=3&pn=1): 条目是视频详情卡片形态, duration 为秒数值, rcmd_reason 为对象 {content, corner_mark}, aid 可能超出安全整数, stat 含完整统计. 数值为测试可控值, 字段形态与真实响应一致.",
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "list": [
+      {
+        "aid": 117131610100062,
+        "videos": 1,
+        "tid": 65,
+        "tname": "网络游戏",
+        "copyright": 1,
+        "pic": "http://i0.hdslb.com/bfs/archive/32bd89a388d516e86c9aef3669217f4d9a8b231d.jpg",
+        "title": "复活吧 ！我的（ ）",
+        "pubdate": 1787286645,
+        "ctime": 1787286645,
+        "desc": "挑战高难度关卡的完整过程记录",
+        "state": 0,
+        "duration": 250,
+        "rights": { "bp": 0, "elec": 0, "download": 0 },
+        "owner": {
+          "mid": 3546883796503085,
+          "name": "HL-Flame",
+          "face": "https://i2.hdslb.com/bfs/face/167d70b1f0e332b72d3584e405722b5d5766c76c.jpg"
+        },
+        "stat": {
+          "aid": 117131610100062,
+          "view": 3229743,
+          "danmaku": 2757,
+          "reply": 13850,
+          "favorite": 202615,
+          "coin": 253954,
+          "share": 31748,
+          "like": 398925,
+          "dislike": 0
+        },
+        "dynamic": "",
+        "cid": 29900000001,
+        "dimension": { "width": 1920, "height": 1080, "rotate": 0 },
+        "short_link_v2": "https://b23.tv/BV1G48M6XEBt",
+        "bvid": "BV1G48M6XEBt",
+        "season_type": 0,
+        "is_ogv": false,
+        "rcmd_reason": { "content": "百万播放", "corner_mark": 0 }
+      },
+      {
+        "aid": 117142020200063,
+        "videos": 1,
+        "tid": 21,
+        "tname": "日常",
+        "copyright": 1,
+        "pic": "http://i1.hdslb.com/bfs/archive/9f0a1c2b3d4e5f60718293a4b5c6d7e8f9012345.jpg",
+        "title": "严肃观看儿子的历史记录",
+        "pubdate": 1787290000,
+        "ctime": 1787290000,
+        "desc": "",
+        "state": 0,
+        "duration": 312,
+        "owner": {
+          "mid": 123456789,
+          "name": "日常记录者",
+          "face": "https://i0.hdslb.com/bfs/face/abcdef0123456789abcdef0123456789abcdef01.jpg"
+        },
+        "stat": {
+          "aid": 117142020200063,
+          "view": 1100000,
+          "danmaku": 900,
+          "reply": 5200,
+          "favorite": 30000,
+          "coin": 41000,
+          "share": 8800,
+          "like": 110000,
+          "dislike": 0
+        },
+        "cid": 29900000002,
+        "dimension": { "width": 1080, "height": 1920, "rotate": 0 },
+        "short_link_v2": "https://b23.tv/BV1Vy8r6JE9z",
+        "bvid": "BV1Vy8r6JE9z",
+        "season_type": 0,
+        "is_ogv": false,
+        "rcmd_reason": { "content": "11万点赞", "corner_mark": 0 }
+      },
+      {
+        "aid": 117153030300064,
+        "videos": 1,
+        "tid": 167,
+        "tname": "国产动画",
+        "copyright": 1,
+        "pic": "//i0.hdslb.com/bfs/archive/protocol-relative-cover-example.jpg",
+        "title": "我这一生最大的罪，是把人写成了妖……",
+        "pubdate": 1787295000,
+        "ctime": 1787295000,
+        "desc": "系列动画更新",
+        "state": 0,
+        "duration": 1500,
+        "owner": {
+          "mid": 987654321,
+          "name": "动画工作室",
+          "face": "https://i1.hdslb.com/bfs/face/fedcba9876543210fedcba9876543210fedcba98.jpg"
+        },
+        "stat": {
+          "aid": 117153030300064,
+          "view": 10500000,
+          "danmaku": 88000,
+          "reply": 42000,
+          "favorite": 500000,
+          "coin": 610000,
+          "share": 95000,
+          "like": 1200000,
+          "dislike": 0
+        },
+        "cid": 29900000003,
+        "dimension": { "width": 1920, "height": 1080, "rotate": 0 },
+        "short_link_v2": "https://b23.tv/BV1rHbY6MEB9",
+        "bvid": "BV1rHbY6MEB9",
+        "season_type": 0,
+        "is_ogv": false,
+        "rcmd_reason": { "content": "千万播放", "corner_mark": 1 }
+      }
+    ],
+    "no_more": false
+  }
+}

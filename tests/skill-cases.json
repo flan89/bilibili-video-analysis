@@ -2122,5 +2122,416 @@
         "threshold": 1.0
       }
     ]
+  },
+  {
+    "id": "popular-snapshot-stop",
+    "category": "popular_snapshot_stop",
+    "execution": "fixture_result",
+    "user_request": "B站现在热门的视频都有哪些？给我看看就行。",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 popular-videos 取一页热门快照 (不翻多页)",
+        "按平台返回顺序列出候选 (标题 + UP 主 + 链接), 注明观察时间 observedAt",
+        "说明这是平台当前热门机制快照, 不代表分区榜单也不代表趋势"
+      ],
+      "forbidden_behaviors": [
+        "调 search-videos 用关键词结果冒充当前热门",
+        "对热门候选逐个调 subtitle / comments 深入分析 (快照任务止步于列举)",
+        "翻页抓取全部热门列表 (quick 快照一页即止)"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "popular"
+      ],
+      "mustNotCallTools": [
+        "search",
+        "subtitle",
+        "comments",
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 2
+    },
+    "semantic_criteria": [
+      {
+        "name": "快照即停止",
+        "description": "只取一页热门并列举, 不翻页也不深入任何候选",
+        "threshold": 0.9
+      },
+      {
+        "name": "来源边界",
+        "description": "说明结果是平台热门机制快照, 不写成榜单排名或趋势结论",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "popular-deep-dive-select-few",
+    "category": "popular_deep_dive",
+    "execution": "real_topic",
+    "user_request": "看看B站当前热门里大家都在看什么，挑几个代表性的帮我分析内容。",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "先调 popular-videos 取一页热门快照",
+        "从热门中选少量 (约 2~3 个) 与用户目标相关的候选",
+        "对选中候选调 subtitle 获取正文证据再做内容分析",
+        "公开选择标准、观察时间和深入样本数量 (Coverage)"
+      ],
+      "forbidden_behaviors": [
+        "对全部热门候选逐个获取正文 (成本失控)",
+        "只凭热门列表标题下内容结论 (发现信号 ≠ 内容证据)",
+        "用 search-videos 的结果冒充热门来源"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "popular",
+        "subtitle"
+      ],
+      "mustNotCallTools": [
+        "comments",
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 8
+    },
+    "semantic_criteria": [
+      {
+        "name": "少量样本深挖",
+        "description": "只选择少量候选深入, 不分析全部热门",
+        "threshold": 0.9
+      },
+      {
+        "name": "来源区分",
+        "description": "明确候选来自当前热门快照而不是搜索结果",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "popular-source-failure",
+    "category": "popular_source_failure",
+    "execution": "fixture_result",
+    "user_request": "看看B站现在都在流行什么热门视频。",
+    "tool_outcome": "failed",
+    "expected": {
+      "required_actions": [
+        "读取 popular-videos 返回的结构化错误 (风控 -352, retryable=true)",
+        "不立即原样连续重试; 可稍后有限重试一次",
+        "无法恢复时向用户如实公开热门获取失败",
+        "不把 search-videos 的关键词搜索结果冒充当前热门"
+      ],
+      "forbidden_behaviors": [
+        "收到风控后立即原参数连续重试",
+        "调用 search-videos 编一个『热门列表』冒充 (单来源失败不静默替换)",
+        "隐藏失败并凭常识编造当前热门内容"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "popular"
+      ],
+      "mustNotCallTools": [
+        "search",
+        "subtitle",
+        "comments",
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "mustDeclareCapabilityGap": [
+        "获取失败",
+        "风控"
+      ],
+      "forbiddenAnswerPatterns": [
+        "找到以下热门",
+        "为你找到",
+        "当前热门如下"
+      ]
+    },
+    "semantic_criteria": [
+      {
+        "name": "失败不冒充",
+        "description": "热门来源失败时不用其它来源静默替换, 也不编造热门内容",
+        "threshold": 1.0
+      },
+      {
+        "name": "失败透明",
+        "description": "向用户公开热门获取失败及原因",
+        "threshold": 0.9
+      }
+    ]
+  },
+  {
+    "id": "popular-trend-boundary",
+    "category": "popular_trend_boundary",
+    "execution": "real_topic",
+    "user_request": "AI 编程内容最近在B站是不是越来越火了？",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "用 search-videos 和/或 popular-videos 做当前快照观察",
+        "如实给出当前可见的热度信号 (候选数量、热门中的相关条目)",
+        "明确说明单次快照无法证明『越来越火』的持续变化, 缺少历史数据"
+      ],
+      "forbidden_behaviors": [
+        "把一次热门或搜索快照写成持续上升趋势",
+        "编造历史对比数据或『近期增长 X%』",
+        "因为无法证明趋势就拒绝回答当前观察"
+      ]
+    },
+    "verification": {
+      "mustNotCallTools": [
+        "subtitle",
+        "comments",
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 4,
+      "forbiddenAnswerPatterns": [
+        "确实在越来越火",
+        "热度持续上升",
+        "呈(现)?上升趋势"
+      ]
+    },
+    "semantic_criteria": [
+      {
+        "name": "趋势边界",
+        "description": "拒绝用当前快照证明持续变化, 显式说明缺少历史数据",
+        "threshold": 1.0
+      },
+      {
+        "name": "当前观察可用",
+        "description": "仍给出当前时间点的可见热度信号, 不因边界而完全拒答",
+        "threshold": 0.7
+      }
+    ]
+  },
+  {
+    "id": "hot-search-faithful-list",
+    "category": "hot_search_faithful_list",
+    "execution": "fixture_result",
+    "user_request": "B站现在热搜都有什么？给我列一下就行。",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 hot-searches 取一组热搜词条快照",
+        "按平台返回顺序如实列出词条 (keyword / 展示名), 注明观察时间 observedAt",
+        "平台返回商业标记 (isCommercial) 的词条如实标注, 不隐藏",
+        "说明这是平台搜索关注度快照, 不是事件背景也不是需求强度排名"
+      ],
+      "forbidden_behaviors": [
+        "把词条自动提交给 search-videos 展开搜索 (quick 快照止步于列举)",
+        "根据词面编造事件背景、原因或趋势解释",
+        "把 heatScore 换算成『上升/下降』趋势或跨时间比较",
+        "把 isCommercial 缺失解读为自然热度背书"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "hot-search"
+      ],
+      "mustNotCallTools": [
+        "search",
+        "popular",
+        "subtitle",
+        "comments",
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 2,
+      "forbiddenAnswerPatterns": [
+        "热搜第一证明",
+        "需求最大",
+        "热度持续上升"
+      ]
+    },
+    "semantic_criteria": [
+      {
+        "name": "如实展示",
+        "description": "如实列出词条与商业标记, 不编造事件背景或趋势",
+        "threshold": 1
+      },
+      {
+        "name": "快照即停止",
+        "description": "只取一组词条并列举, 不自动展开搜索也不深入视频",
+        "threshold": 0.9
+      }
+    ]
+  },
+  {
+    "id": "hot-search-single-word-dive",
+    "category": "hot_search_single_word_dive",
+    "execution": "fixture_result",
+    "user_request": "我在B站热搜上看到『考研择校』这个词，帮我研究下相关内容。",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 hot-searches 确认词条存在并取得其 keyword",
+        "只展开与用户目标直接相关的一个词, 用 keyword 调 search-videos 进入搜索",
+        "按发现策略从搜索候选中选少量 (3~5 个) 视频深入",
+        "说明研究入口来自热搜词条, 区分词条快照与搜索结果两个来源"
+      ],
+      "forbidden_behaviors": [
+        "批量展开多个热词各自搜索",
+        "拿 displayName 当搜索词 (应使用 keyword)",
+        "因为词条在热搜上就宣称该主题已被市场验证",
+        "跳过搜索直接凭词面编造相关内容"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "hot-search",
+        "search"
+      ],
+      "mustNotCallTools": [
+        "popular",
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 6
+    },
+    "semantic_criteria": [
+      {
+        "name": "只展开一个词",
+        "description": "只展开一个与用户目标直接相关的热搜词, 不批量展开多个热词",
+        "threshold": 1
+      },
+      {
+        "name": "两步流程可追溯",
+        "description": "研究入口可追溯到热搜词条 keyword → search-videos 的显式两步",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "id": "related-no-recursion",
+    "category": "related_no_recursion",
+    "execution": "fixture_result",
+    "user_request": "我刚看完 BV1C48C6BEDN 这个视频，帮我顺着它找找B站上还有哪些相关的视频。",
+    "tool_outcome": "success",
+    "expected": {
+      "required_actions": [
+        "调 related-videos 一次取种子视频的关联推荐快照 (接口无分页)",
+        "按相关性、创作者差异和内容角色从候选中选少量值得深入的条目",
+        "说明候选来自平台关联推荐机制, 不是主题代表性抽样也不是榜单",
+        "需要覆盖主题时可补一次 search-videos, 并说明两来源各自角色, 不静默混合"
+      ],
+      "forbidden_behaviors": [
+        "对每个关联候选再调 related-videos 递归展开推荐链",
+        "把与种子主题不同的候选当成异常丢弃或强行解读为同主题",
+        "把关联推荐结果写成该主题的代表性样本或热度排名"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "related"
+      ],
+      "mustNotCallTools": [
+        "subtitle",
+        "comments",
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3
+    },
+    "semantic_criteria": [
+      {
+        "name": "不递归展开",
+        "description": "只调一次 related-videos, 不对候选继续递归获取关联推荐",
+        "threshold": 1.0
+      },
+      {
+        "name": "来源边界",
+        "description": "说明候选来自平台关联推荐而非代表性抽样, 主题不同的候选如实说明",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "id": "related-failure-no-substitution",
+    "category": "related_failure_no_substitution",
+    "execution": "fixture_result",
+    "user_request": "帮我顺着 BV1C48C6BEDN 这个视频找一些相关推荐。",
+    "tool_outcome": "failed",
+    "expected": {
+      "required_actions": [
+        "读取 related-videos 返回的结构化错误 (code=-400 先核对种子视频输入; 风控不立即连续重试)",
+        "向用户如实公开关联推荐获取失败及原因",
+        "目标允许时可改用 search-videos, 但必须明确标注那是关键词搜索而非关联推荐"
+      ],
+      "forbidden_behaviors": [
+        "把 search-videos 的关键词搜索结果冒充关联推荐",
+        "收到 -400 后立即原参数连续重试",
+        "隐藏失败并凭种子视频标题编造相关内容"
+      ]
+    },
+    "verification": {
+      "mustCallTools": [
+        "related"
+      ],
+      "mustNotCallTools": [
+        "subtitle",
+        "comments",
+        "danmaku",
+        "frames",
+        "video",
+        "audio",
+        "timeline",
+        "cover"
+      ],
+      "maxToolCallCount": 3,
+      "mustDeclareCapabilityGap": [
+        "获取失败"
+      ],
+      "forbiddenAnswerPatterns": [
+        "为你推荐了以下相关视频",
+        "找到以下相关推荐",
+        "关联视频如下"
+      ]
+    },
+    "semantic_criteria": [
+      {
+        "name": "失败不冒充",
+        "description": "关联推荐失败时不用搜索结果静默替换; 改用搜索时必须显式标注来源差异",
+        "threshold": 1.0
+      },
+      {
+        "name": "失败透明",
+        "description": "向用户公开关联推荐获取失败及原因",
+        "threshold": 0.9
+      }
+    ]
   }
 ]

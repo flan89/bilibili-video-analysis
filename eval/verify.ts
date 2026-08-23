@@ -50,10 +50,16 @@ export interface VerifyAgentRunsResult {
   pendingSemanticJudge: Array<{ caseId: string; criteriaCount: number }>;
 }
 
-/** 工具名归一化：search / metadata / subtitle / comments / danmaku / video / frames / audio / timeline / cover。 */
+/** 工具名归一化：search / popular / hot-search / related / metadata / subtitle / comments / danmaku / video / frames / audio / timeline / cover。 */
 const KNOWN_TOOL_NAMES = new Set([
   // M7 新增：主题发现阶段的视频搜索 Tool（CLI 名 search-videos，归一化为 search）。
   "search",
+  // M8 新增：当前热门 Tool（CLI 名 popular-videos，归一化为 popular）。
+  "popular",
+  // M8 批次 B 新增：当前热搜 Tool（CLI 名 hot-searches，归一化为 hot-search）。
+  "hot-search",
+  // M8 批次 C 新增：关联推荐 Tool（CLI 名 related-videos，归一化为 related）。
+  "related",
   "metadata",
   "subtitle",
   "comments",
@@ -74,6 +80,9 @@ function extractToolMentions(text: string): Set<string> {
   for (const name of KNOWN_TOOL_NAMES) {
     const aliasMap: Record<string, RegExp[]> = {
       search: [/\bsearch(-videos)?\b/i, /搜索\s*Tool/, /搜索工具/, /视频搜索/],
+      popular: [/\bpopular(-videos)?\b/i, /热门\s*Tool/, /热门工具/, /当前热门/],
+      "hot-search": [/\bhot(-|_)?search(es)?\b/i, /热搜\s*Tool/, /热搜工具/, /热搜词/],
+      related: [/\brelated(-videos)?\b/i, /关联\s*Tool/, /关联工具/, /关联推荐/, /关联视频/],
       metadata: [/\bmetadata\b/i, /元信息/, /视频元信息/],
       subtitle: [/\bsubtitle\b/i, /官方字幕/, /字幕\s*Tool/, /字幕工具/],
       comments: [/\bcomments?\b/i, /评论/],

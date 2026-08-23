@@ -20,8 +20,12 @@ function fixture(name: string): unknown {
 interface SubtitleFixtureClientOptions {
   metadataFixture?: "view-single.json" | "view-multi.json";
   view?: RawSubtitleView;
+  /** 按调用顺序返回字幕轨，用于模拟首次空轨、复核恢复。 */
+  viewSequence?: RawSubtitleView[];
   body?: unknown;
   failure?: "metadata" | "view" | "body";
+  /** 仅让第几次字幕轨请求失败，用于验证补充复核不会破坏首次可解释结果。 */
+  failViewOnCall?: number;
   resolvedUrl?: string;
 }
 
@@ -30,15 +34,19 @@ class SubtitleFixtureClient implements BilibiliSubtitleClient {
   readonly resolvedUrls: string[] = [];
   private readonly metadataFixture: "view-single.json" | "view-multi.json";
   private readonly view: RawSubtitleView;
+  private readonly viewSequence?: RawSubtitleView[];
   private readonly body: unknown;
   private readonly failure?: "metadata" | "view" | "body";
+  private readonly failViewOnCall?: number;
   private readonly resolvedUrl?: string;
 
   constructor(options: SubtitleFixtureClientOptions = {}) {
     this.metadataFixture = options.metadataFixture ?? "view-single.json";
     this.view = options.view ?? rawView("subtitle-view-single.json");
+    this.viewSequence = options.viewSequence;
     this.body = options.body ?? fixture("subtitle-body.json");
     this.failure = options.failure;
+    this.failViewOnCall = options.failViewOnCall;
     this.resolvedUrl = options.resolvedUrl;
   }
 
@@ -70,14 +78,21 @@ class SubtitleFixtureClient implements BilibiliSubtitleClient {
     query: Record<string, string | number | boolean | undefined>,
   ): Promise<Uint8Array> {
     this.binaryQueries.push(query);
-    if (this.failure === "view") {
+    if (
+      this.failure === "view"
+      || this.binaryQueries.length === this.failViewOnCall
+    ) {
       throw new BilibiliError({
         code: "subtitle_view_failed",
         message: "模拟字幕轨接口失败",
         retryable: true,
       });
     }
-    return encodeSubtitleViewFixture(this.view);
+    const sequenceIndex = Math.min(
+      this.binaryQueries.length - 1,
+      Math.max(0, (this.viewSequence?.length ?? 1) - 1),
+    );
+    return encodeSubtitleViewFixture(this.viewSequence?.[sequenceIndex] ?? this.view);
   }
 
   async getJsonFromUrl<T>(_url: string, schema: z.ZodType<T>): Promise<T> {
@@ -145,9 +160,10 @@ describe("getBilibiliSubtitle", () => {
   });
 
   it("没有官方字幕时返回 missing 和自动语音识别后续建议", async () => {
+    const client = new SubtitleFixtureClient({ view: rawView("subtitle-view-none.json") });
     const result = await getBilibiliSubtitle(
       { video: "BV15wGR6CEhY" },
-      { client: new SubtitleFixtureClient({ view: rawView("subtitle-view-none.json") }) },
+      { client },
     );
 
     expect(result.success).toBe(false);
@@ -155,6 +171,45 @@ describe("getBilibiliSubtitle", () => {
     expect(result.acquisition.reasonCode).toBe("no_official_subtitle");
     expect(result.fallback?.strategy).toBe("audio_to_asr");
     expect(result.transcript).toBeUndefined();
+    expect(client.binaryQueries).toHaveLength(2);
+    expect(result.acquisition.warnings.join("\n")).toContain("连续两次返回空结果");
+  });
+
+  it("字幕轨首次空响应时只复核一次，并使用恢复后的官方字幕", async () => {
+    const client = new SubtitleFixtureClient({
+      viewSequence: [
+        rawView("subtitle-view-none.json"),
+        rawView("subtitle-view-single.json"),
+      ],
+    });
+
+    const result = await getBilibiliSubtitle(
+      { video: "BV15wGR6CEhY" },
+      { client },
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.transcript?.source).toBe("official");
+    expect(client.binaryQueries).toHaveLength(2);
+    expect(result.acquisition.warnings.join("\n")).toContain("有限复核后恢复");
+  });
+
+  it("首次空轨后的补充复核失败时保留不确定性并继续降级", async () => {
+    const client = new SubtitleFixtureClient({
+      view: rawView("subtitle-view-none.json"),
+      failViewOnCall: 2,
+    });
+
+    const result = await getBilibiliSubtitle(
+      { video: "BV15wGR6CEhY" },
+      { client },
+    );
+
+    expect(result.outcome).toBe("missing");
+    expect(result.acquisition.reasonCode).toBe("no_official_subtitle");
+    expect(client.binaryQueries).toHaveLength(2);
+    expect(result.acquisition.warnings.join("\n")).toContain("有限复核失败");
+    expect(result.acquisition.warnings.join("\n")).toContain("无法确认");
   });
 
   it("字幕正文为空时返回 missing，不把它当程序异常", async () => {

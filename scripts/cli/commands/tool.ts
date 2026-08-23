@@ -11,9 +11,18 @@ import { getBilibiliComments } from "../../comments/get.js";
 import { getBilibiliCommentReplies } from "../../comments/get-replies.js";
 import { getBilibiliFrames } from "../../visual/get.js";
 import { searchBilibiliVideos } from "../../discovery/search-videos.js";
+import { getBilibiliPopularVideos } from "../../discovery/popular-videos.js";
+import { getBilibiliHotSearches } from "../../discovery/hot-searches.js";
+import { getBilibiliRelatedVideos } from "../../discovery/related-videos.js";
 import { toAgentSubtitleOutput } from "../subtitle/agent-output.js";
 import { toAgentDanmakuOutput } from "../danmaku/agent-output.js";
 import { toAgentCommentsOutput } from "../comments/agent-output.js";
+import {
+  toAgentHotSearchesOutput,
+  toAgentPopularVideosOutput,
+  toAgentRelatedVideosOutput,
+  toAgentSearchVideosOutput,
+} from "../discovery/agent-output.js";
 
 type ToolFunction = (input: never) => Promise<unknown>;
 
@@ -49,6 +58,22 @@ const TOOL_MAP: Record<string, { functionName: string; run: ToolFunction; compac
   "search-videos": {
     functionName: "searchBilibiliVideos",
     run: searchBilibiliVideos as ToolFunction,
+    compact: toAgentSearchVideosOutput as (result: never) => unknown,
+  },
+  "popular-videos": {
+    functionName: "getBilibiliPopularVideos",
+    run: getBilibiliPopularVideos as ToolFunction,
+    compact: toAgentPopularVideosOutput as (result: never) => unknown,
+  },
+  "hot-searches": {
+    functionName: "getBilibiliHotSearches",
+    run: getBilibiliHotSearches as ToolFunction,
+    compact: toAgentHotSearchesOutput as (result: never) => unknown,
+  },
+  "related-videos": {
+    functionName: "getBilibiliRelatedVideos",
+    run: getBilibiliRelatedVideos as ToolFunction,
+    compact: toAgentRelatedVideosOutput as (result: never) => unknown,
   },
 };
 
@@ -62,7 +87,7 @@ ${Object.keys(TOOL_MAP)
   .join("\n")}
 
 Input: JSON 字符串 (e.g. '{"video":"BV1xx411c7mD"}')
-Option: --compact（仅支持 subtitle / danmaku / comments）
+Option: --compact（支持 subtitle / danmaku / comments 及四个 discovery Tool）
 Output: 完整 Tool 结果 JSON 到 stdout, 错误 JSON 到 stderr
 `;
 

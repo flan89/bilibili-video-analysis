@@ -99,7 +99,7 @@ export function parseBilibiliVideoInput(input: string): ParsedBilibiliVideoInput
   } catch (error) {
     throw new BilibiliError({
       code: "invalid_video_input",
-      message: "无法识别视频输入，请提供 B站视频 URL、BV号或 av号",
+      message: "输入不符合当前支持的 B站视频 URL、BV号或 av号格式；尚未向B站发起请求",
       cause: error,
     });
   }

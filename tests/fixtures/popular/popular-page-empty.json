@@ -1,0 +1,10 @@
+{
+  "_comment": "热门接口空列表场景: 平台声明 no_more=true, Tool 应表现为 missing 而非 failed.",
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "list": [],
+    "no_more": true
+  }
+}

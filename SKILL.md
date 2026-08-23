@@ -76,6 +76,9 @@ Tool 负责外部数据与确定性处理，不负责语义结论。
 | 数据能力 | Tool reference |
 |---|---|
 | 视频搜索（仅 `topic_research` 阶段一） | [`references/tools/video-search.md`](references/tools/video-search.md) |
+| 当前热门快照（平台热门机制，非排行榜） | [`references/tools/popular-videos.md`](references/tools/popular-videos.md) |
+| 当前热搜词条（搜索关注度快照，非事件背景） | [`references/tools/hot-searches.md`](references/tools/hot-searches.md) |
+| 给定视频的关联推荐（推荐邻接关系，非主题等价） | [`references/tools/related-videos.md`](references/tools/related-videos.md) |
 | 视频元信息 | [`references/tools/metadata.md`](references/tools/metadata.md) |
 | Transcript（官方字幕 + ASR fallback） | [`references/tools/subtitle.md`](references/tools/subtitle.md) |
 | 弹幕 | [`references/tools/danmaku.md`](references/tools/danmaku.md) |
@@ -83,6 +86,8 @@ Tool 负责外部数据与确定性处理，不负责语义结论。
 | 关键帧 / 视觉变化候选 | [`references/tools/frames.md`](references/tools/frames.md) |
 
 只有 Data Routing 确定需要某项数据时，才读取对应 Tool reference，并按其中的当前契约调用。
+
+命令行调用优先使用 Tool reference 推荐的紧凑输出，并复用同一次成功结果。不要只为缩短、截取或改换展示格式而重复请求；紧凑输出中的采集状态和 `warnings` 仍是结论边界的一部分。
 
 ### 3.1 统一理解 Tool 结果
 

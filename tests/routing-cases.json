@@ -1405,7 +1405,7 @@
       "capability_gap": [
         "trending_ranking"
       ],
-      "acceptance_note": "用户要求当前热门/榜单；Intent 识别为 topic_research，但 Skill 没有榜单/热搜 Tool。数据规划必须报告能力缺口，不能偷偷用普通关键词搜索冒充榜单。"
+      "acceptance_note": "用户要求分区榜单；M8 批次 A 后 Skill 有当前热门 Tool (popular-videos), 但热门是平台综合机制列表, 不支持分区过滤。可说明该边界, 不能用普通关键词搜索冒充分区榜单。"
     }
   },
   {
@@ -1471,6 +1471,187 @@
         "historical_trend_data"
       ],
       "acceptance_note": "趋势是 topic_research 的开放 Focus（trend_snapshot）：Intent 不能因为缺少历史数据被降级为普通内容总结。当前只有搜索快照，可以用候选发布时间分布做当前观察，但必须显式说明无法证明持续上升趋势。"
+    }
+  },
+  {
+    "id": 62,
+    "user_request": "B站现在热门的视频都有哪些？给我看看就行。",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "quick",
+      "focus_semantics": [
+        "当前热门",
+        "热门快照"
+      ],
+      "must_require": [
+        "popular_video_candidates"
+      ],
+      "must_not_default": [
+        "video_candidates",
+        "transcript",
+        "comments",
+        "danmaku",
+        "frames"
+      ],
+      "acceptance_note": "当前热门 quick：只需 popular_video_candidates 一页快照；不用关键词搜索冒充热门，也不深入任何单个视频。"
+    }
+  },
+  {
+    "id": 63,
+    "user_request": "看看B站当前热门里大家都在看什么，挑几个代表性的帮我分析内容。",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "当前热门",
+        "热门内容分析",
+        "代表性样本"
+      ],
+      "must_require": [
+        "popular_video_candidates",
+        "transcript"
+      ],
+      "must_not_default": [
+        "full_comments",
+        "frames"
+      ],
+      "acceptance_note": "当前热门内容分析：先取一页热门快照，再从中选少量 (3~5 个) 视频获取 Transcript；不对全部热门逐个深入，也不用搜索冒充热门。"
+    }
+  },
+  {
+    "id": 64,
+    "user_request": "帮我出一份B站各分区排行榜，我要看每个分区前三名。",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "分区排行榜",
+        "榜单"
+      ],
+      "must_require": [],
+      "must_not_default": [
+        "video_candidates"
+      ],
+      "capability_gap": [
+        "trending_ranking"
+      ],
+      "acceptance_note": "明确要求分区排行榜：当前热门 Tool 只是平台综合热门列表，无分区排名能力。应保持 topic_research 路由并报告能力缺口，不能用热门列表或搜索冒充分区榜单。"
+    }
+  },
+  {
+    "id": 65,
+    "user_request": "AI 编程内容最近在B站是不是越来越火了？",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "主题热度",
+        "趋势判断边界"
+      ],
+      "must_require": [
+        "video_candidates"
+      ],
+      "must_not_default": [
+        "fabricated_trend_conclusion"
+      ],
+      "capability_gap": [
+        "historical_trend_data"
+      ],
+      "acceptance_note": "趋势问题在 M8 后有了热门快照，但单次热门/搜索快照都不能证明『越来越火』的持续变化；可以做当前观察并显式说明时间边界，不能把一次快照写成上升趋势。"
+    }
+  },
+  {
+    "id": 66,
+    "user_request": "B站现在热搜都有什么？给我列一下就行。",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "quick",
+      "focus_semantics": [
+        "当前热搜",
+        "热搜快照"
+      ],
+      "must_require": [
+        "hot_search_topics"
+      ],
+      "must_not_default": [
+        "video_candidates",
+        "transcript",
+        "comments",
+        "danmaku",
+        "frames"
+      ],
+      "acceptance_note": "当前热搜 quick：只需 hot_search_topics 一组词条快照；如实列出词条与商业标记，不编造事件背景，不用热门标题猜热搜，也不把词条自动提交给搜索。"
+    }
+  },
+  {
+    "id": 67,
+    "user_request": "我看到B站热搜上有个词挺感兴趣，帮我研究下这个词相关的内容。",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "热搜词条研究",
+        "两步流程"
+      ],
+      "must_require": [
+        "hot_search_topics",
+        "video_candidates"
+      ],
+      "must_not_default": [
+        "full_comments",
+        "frames"
+      ],
+      "acceptance_note": "从热搜进入主题研究：先取 hot_search_topics，只展开一个与用户目标直接相关的词，用其 keyword 调用 search-videos 取 video_candidates，再按发现策略选少量候选深入；不批量展开多个热词。"
+    }
+  },
+  {
+    "id": 68,
+    "user_request": "我刚看完 BV1C48C6BEDN 这个视频，帮我顺着它找找B站上还有哪些相关的视频。",
+    "expected": {
+      "primary_intent": "topic_research",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "关联推荐发现",
+        "从给定视频继续发现"
+      ],
+      "must_require": [
+        "related_video_candidates"
+      ],
+      "must_not_default": [
+        "transcript",
+        "full_comments",
+        "frames"
+      ],
+      "acceptance_note": "给定视频且目标是继续发现相关内容：调一次 related-videos 取 related_video_candidates，按发现策略选少量候选；结论必须表述候选来自平台关联推荐而非代表性抽样；需要覆盖主题时可补一次 search-videos 并说明两来源各自角色，不静默混合。"
+    }
+  },
+  {
+    "id": 69,
+    "user_request": "帮我看看 BV1C48C6BEDN 这个视频，UP主在里面讲了哪些核心观点？",
+    "expected": {
+      "primary_intent": "content_learn",
+      "clarification_needed": false,
+      "depth": "standard",
+      "focus_semantics": [
+        "单视频观点提取"
+      ],
+      "must_require": [
+        "transcript"
+      ],
+      "must_not_default": [
+        "related_video_candidates",
+        "video_candidates",
+        "full_comments",
+        "full_replies"
+      ],
+      "acceptance_note": "用户给定视频且问题针对该视频正文（观点、内容），仍走单视频 content_learn 流程；不要因为新增了关联推荐能力就误触发 related-videos 或继续发现流程。"
     }
   }
 ]

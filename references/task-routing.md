@@ -130,7 +130,7 @@ Focus 是开放集合。测试中的 Focus 只是示例，不是白名单。
 
 ### `topic_research`
 
-用户没有提供具体视频，而是给出主题、问题或品类，需要先在B站发现合适的视频，再进行研究。
+用户没有提供具体视频，而是给出主题、问题或品类，需要先在B站发现合适的视频，再进行研究；或者用户想直接了解平台当前的发现信号（当前热门等）。
 
 典型目标：
 
@@ -138,20 +138,25 @@ Focus 是开放集合。测试中的 Focus 只是示例，不是白名单。
 - 从主题出发寻找并比较多个视频；
 - 只想找几个值得看的视频；
 - 比较同一主题下的不同方法或流派；
-- 围绕某个问题收集多个视频中的答案。
+- 围绕某个问题收集多个视频中的答案；
+- 查看B站当前热门里有哪些值得关注的内容；
+- 从一个具体视频继续发现相关但侧重点不同的内容。
 
 常见 Focus 示例：
 
-`method_comparison`、`shared_consensus`、`key_disagreements`、`complementary_insights`、`representative_sampling`、`topic_landscape`、`trend_snapshot`、`quick_recommendation`。
+`method_comparison`、`shared_consensus`、`key_disagreements`、`complementary_insights`、`representative_sampling`、`topic_landscape`、`trend_snapshot`、`quick_recommendation`、`popular_snapshot`、`hot_search_snapshot`、`related_recommendation`。
 
 判定边界：
 
 - **没有视频、需要先发现内容 → `topic_research`**；用户给了一个具体视频问“里面关于 X 讲了什么”，是 `content_learn` 的定向问题，不是 `topic_research`；
+- **用户给了具体视频，但目标是“找类似、找相关、继续发现”→ `topic_research`**：不能因为存在视频链接就误判为 `content_learn`；此时按发现策略用关联推荐（`related-videos`）展开，并表述推荐邻接关系边界；用户给定视频且问题针对该视频正文时，仍走单视频流程，不误触发关联推荐；
+- **用户询问当前热门 → `topic_research + quick`**：可以直接用一页热门快照回答，不自动深入分析全部条目；
 - **比较分析不单独成为 Intent**：比较多个视频 = `topic_research`；比较同一视频里弹幕与评论 = `audience_insight` 的跨渠道 Focus；
 - **“只想找几个相关视频”** 是 `topic_research + quick`，搜索并解释候选即可，不自动深入分析；
 - **明确商业目标 + 需要跨视频发现**：按用户最终目标决定 `market_research` 与 `topic_research` 的主次组合，商业结论仍受 `market_research` 边界约束；
-- **趋势只是开放 Focus**：出现“最近”“热门”不自动承诺历史趋势能力；当前搜索快照只支持当前观察窗口内的表述；
-- **用户直接要求当前榜单或热搜**：Intent 仍应正确识别，但当前 Skill 没有榜单 / 热搜 Tool，数据规划必须报告能力缺口，不能偷偷改成普通关键词搜索冒充榜单。
+- **趋势只是开放 Focus**：出现“最近”“热门”不自动承诺历史趋势能力；用户询问某主题是否持续升温时，仍报告历史数据缺口，不能用一次热门或搜索快照冒充趋势；
+- **用户明确要求排行榜**：当前 Skill 没有排行榜 Tool，数据规划必须报告能力缺口，**不能用当前热门替代排行榜**，也不能偷偷改成普通关键词搜索冒充；
+- **用户要求热搜** → `topic_research + quick`：直接用一组热搜词条快照回答，如实列出词条与商业标记，不编造事件背景；用户要求研究某个词时，才按发现策略展开"热搜词 → `search-videos`"两步流程；用户自带热搜词进来而会话中没有近期热搜快照时，先取一组热搜核对词条与商业标记，再进入搜索；
 
 ---
 

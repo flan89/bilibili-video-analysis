@@ -15,6 +15,11 @@
 import { BilibiliError } from "../bilibili/errors.js";
 import type { WbiSigner } from "../bilibili/wbi.js";
 import {
+  BVID_PATTERN,
+  normalizeProtocolRelativeUrl,
+  toCount,
+} from "./bilibili-discovery-helpers.js";
+import {
   type RawSearchResponse,
   type RawSearchVideoItem,
   RawSearchVideoItemSchema,
@@ -56,23 +61,14 @@ export function stripHighlightTags(text: string): string {
   return text.replace(HIGHLIGHT_TAG_PATTERN, "").trim();
 }
 
-/** BV 号最小格式校验, 与 bilibili/url.ts 保持一致. */
-const BVID_PATTERN = /^BV[0-9A-Za-z]{10}$/;
+// BV 号校验 / 协议相对地址规范化 / 数值转换已提取到 bilibili-discovery-helpers.ts,
+// 供热门与关联推荐来源复用 (M8); 这里保持原有导出, 现有调用方与测试不受影响.
+export { normalizeProtocolRelativeUrl, toCount };
 
 /** 从 arcurl 提取 BV 号; 接受协议相对地址和完整 URL. */
 export function extractBvidFromArcurl(arcurl: string): string | undefined {
   const match = arcurl.match(/BV[0-9A-Za-z]{10}/);
   return match?.[0];
-}
-
-/**
- * 协议相对地址 ("//i0.hdslb.com/...") → https 绝对地址.
- * 已是 http(s) 的原样返回; 无法规范化的返回 undefined.
- */
-export function normalizeProtocolRelativeUrl(url: string): string | undefined {
-  if (url.startsWith("//")) return `https:${url}`;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  return undefined;
 }
 
 /**
@@ -92,14 +88,6 @@ export function parseDurationToSeconds(text: string): number | undefined {
     seconds = seconds * 60 + part;
   }
   return seconds;
-}
-
-/** 把搜索接口的统计字段 (number | "--" 字符串) 转成非负整数; 无法解析返回 undefined. */
-export function toCount(raw: number | string | undefined): number | undefined {
-  if (raw === undefined) return undefined;
-  const value = typeof raw === "number" ? raw : Number(raw.trim());
-  if (!Number.isFinite(value) || value < 0) return undefined;
-  return Math.floor(value);
 }
 
 /* -------- 单条 raw → VideoCandidate -------- */

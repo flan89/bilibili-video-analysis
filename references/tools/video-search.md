@@ -31,10 +31,10 @@ Tool 只负责采集、参数映射和确定性清理（去高亮、URL 规范�
 ### 调用
 
 ```bash
-node <skill-root>/dist/cli.mjs tool search-videos '{"query":"Agent Skill 设计","order":"relevance"}'
+node <skill-root>/dist/cli.mjs tool search-videos '{"query":"Agent Skill 设计","order":"relevance"}' --compact
 ```
 
-`search-videos` 不支持 `--compact`：输出本身就是轻量候选结构，没有 subtitle 那种需要省略的重复长字段，`--compact` 仅支持 subtitle / danmaku / comments。
+Agent 初筛默认使用 `--compact`。它省略长简介、封面和头像，但保留候选身份、标题、作者、位置、统计、分页、采集状态和全部 `warnings`。需要核对完整候选字段时才使用不带该选项的命令；不要只为改变展示格式重复请求同一页。
 
 ### 关键输出
 

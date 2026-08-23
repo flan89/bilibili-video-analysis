@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { BilibiliClient } from "../../scripts/bilibili/client.js";
 import {
   getBilibiliSubtitle,
-  type GetSubtitleOutput,
 } from "../../scripts/subtitle/get.js";
 
 /**
@@ -19,32 +18,11 @@ const knownNoSubtitleVideo = process.env.BILIBILI_NO_SUBTITLE_VIDEO ?? "BV1774Uz
 const multiPartVideo = process.env.BILIBILI_MULTIPART_SUBTITLE_VIDEO;
 const suite = enabled ? describe : describe.skip;
 
-/**
- * B站匿名字幕轨接口会对同一视频偶发返回空轨。正向兼容性测试允许有限重试，
- * 但只重试 `no_official_subtitle`；协议错误、正文错误等真实回归立即失败。
- */
-async function knownSubtitleWithRetry(
-  video: string,
-  client: BilibiliClient,
-  maxAttempts = 4,
-): Promise<GetSubtitleOutput> {
-  let result = await getBilibiliSubtitle({ video }, { client });
-  for (
-    let attempt = 1;
-    attempt < maxAttempts
-      && !result.success
-      && result.acquisition.reasonCode === "no_official_subtitle";
-    attempt += 1
-  ) {
-    result = await getBilibiliSubtitle({ video }, { client });
-  }
-  return result;
-}
-
 suite("bilibili.get_subtitle 真实集成测试", () => {
   it("能从已知有字幕的公开视频得到带时间戳 Transcript", async () => {
     const client = new BilibiliClient({ cookie: process.env.BILIBILI_COOKIE });
-    const result = await knownSubtitleWithRetry(knownSubtitleVideo, client);
+    // Tool 内部已对首次空轨做一次有限复核，集成测试不再从外层重复整次调用。
+    const result = await getBilibiliSubtitle({ video: knownSubtitleVideo }, { client });
 
     expect(result.success).toBe(true);
     expect(result.outcome).toBe("success");

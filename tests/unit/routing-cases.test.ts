@@ -66,6 +66,12 @@ const V1_AVAILABLE_DATA_KINDS: ReadonlySet<string> = new Set([
   "frames",
   // M7 新增：主题发现阶段的视频搜索候选。
   "video_candidates",
+  // M8 批次 A 新增：当前热门快照候选。
+  "popular_video_candidates",
+  // M8 批次 B 新增：当前热搜词列表（是主题词，不是视频）。
+  "hot_search_topics",
+  // M8 批次 C 新增：种子视频的关联推荐候选。
+  "related_video_candidates",
 ]);
 
 /**
@@ -99,8 +105,8 @@ function partitionDataPlan(caseExpected: {
 }
 
 describe("routing-cases 数据基线", () => {
-  it("61 条案例都符合当前任务路由契约，且 ID 不重复", () => {
-    const cases = z.array(RoutingCaseSchema).length(61).parse(loadRoutingCases());
+  it("69 条案例都符合当前任务路由契约，且 ID 不重复", () => {
+    const cases = z.array(RoutingCaseSchema).length(69).parse(loadRoutingCases());
     const ids = new Set(cases.map((item) => item.id));
 
     expect(ids.size).toBe(cases.length);
@@ -113,7 +119,7 @@ describe("routing-cases 数据基线", () => {
  * 该轴独立于当前 Tool Availability：即使 Required Data 未实现，Intent 仍应正确。
  */
 describe("routing-cases 任务路由正确性", () => {
-  const cases = z.array(RoutingCaseSchema).length(61).parse(loadRoutingCases());
+  const cases = z.array(RoutingCaseSchema).length(69).parse(loadRoutingCases());
 
   it("Focus 是开放集合：不允许把 focus_semantics 固化为 enum 白名单或要求逐字匹配", () => {
     // 该断言通过"不存在的字符串"也能通过的方式守护开放集合：
@@ -209,7 +215,7 @@ describe("routing-cases 任务路由正确性", () => {
  * 评估 Required / Avoid / Capability Gap 是否与当前 Skill 真实能力一致。
  */
 describe("routing-cases 数据计划可执行性", () => {
-  const cases = z.array(RoutingCaseSchema).length(61).parse(loadRoutingCases());
+  const cases = z.array(RoutingCaseSchema).length(69).parse(loadRoutingCases());
 
   it("未实现数据的 case 必须显式声明 capability_gap，避免 Agent 误降级为 content_learn", () => {
     const unmet = cases.filter((c) => {
@@ -292,7 +298,7 @@ describe("routing-cases 数据计划可执行性", () => {
  * 等关键路由情形有代表性 case 覆盖，避免后续 P1-3 LLM Judge 缺乏输入。
  */
 describe("routing-cases Intent × Focus 覆盖度与边界", () => {
-  const cases = z.array(RoutingCaseSchema).length(61).parse(loadRoutingCases());
+  const cases = z.array(RoutingCaseSchema).length(69).parse(loadRoutingCases());
 
   it("澄清型请求至少 2 条，覆盖不同分叉（学内容 vs 学制作、复述 vs 创作）", () => {
     const clarificationCases = cases.filter(
@@ -429,5 +435,100 @@ describe("routing-cases Intent × Focus 覆盖度与边界", () => {
         ),
     );
     expect(marketTopicCombo).toBeDefined();
+  });
+
+  /**
+   * M8 批次 A：当前热门路由覆盖度。
+   * 守护热门快照 / 热门内容分析 / 榜单缺口 / 趋势快照边界四条关键判定，
+   * 防止后续改动丢失来源选择边界（AGENTS_M8 §15.5 第 1/2/7/8 条）。
+   */
+  it("M8 当前热门覆盖：quick 快照 / 先热门后正文 / 排行榜缺口 / 趋势快照边界", () => {
+    // 热门 quick：只需 popular_video_candidates，不深入也不搜索冒充
+    const popularQuick = cases.find(
+      (c) =>
+        c.expected.primary_intent === "topic_research" &&
+        c.expected.depth === "quick" &&
+        c.expected.must_require.includes("popular_video_candidates"),
+    );
+    expect(popularQuick).toBeDefined();
+    expect(popularQuick!.expected.must_not_default).toContain("video_candidates");
+
+    // 热门内容分析：先热门快照再选少量视频取 Transcript
+    const popularDeep = cases.find(
+      (c) =>
+        c.expected.primary_intent === "topic_research" &&
+        c.expected.must_require.includes("popular_video_candidates") &&
+        c.expected.must_require.includes("transcript"),
+    );
+    expect(popularDeep).toBeDefined();
+
+    // 明确排行榜：热门 Tool 不是分区榜单，继续报告能力缺口
+    const rankingGap = cases.filter((c) =>
+      (c.expected.capability_gap ?? []).includes("trending_ranking"),
+    );
+    expect(
+      rankingGap.length,
+      "热门 Tool 上线后仍应保留榜单缺口 case（分区榜单无能力）",
+    ).toBeGreaterThanOrEqual(2);
+
+    // 趋势边界：单次热门/搜索快照不能证明持续变化
+    const trendGap = cases.filter((c) =>
+      (c.expected.capability_gap ?? []).includes("historical_trend_data"),
+    );
+    expect(
+      trendGap.length,
+      "热门快照上线后仍应保留趋势边界 case",
+    ).toBeGreaterThanOrEqual(2);
+  });
+
+  /**
+   * M8 批次 B：当前热搜路由覆盖度。
+   * 守护热搜 quick 快照 / 热搜词→搜索两步流程两条关键判定，
+   * 防止后续改动丢失热搜来源边界（AGENTS_M8 §15.5 第 3/4 条）。
+   */
+  it("M8 当前热搜覆盖：quick 快照 / 热搜词进入主题研究两步流程", () => {
+    // 热搜 quick：只需 hot_search_topics，不自动展开搜索也不深入视频
+    const hotSearchQuick = cases.find(
+      (c) =>
+        c.expected.primary_intent === "topic_research" &&
+        c.expected.depth === "quick" &&
+        c.expected.must_require.includes("hot_search_topics"),
+    );
+    expect(hotSearchQuick).toBeDefined();
+    expect(hotSearchQuick!.expected.must_not_default).toContain("video_candidates");
+
+    // 从热搜选一个词进入主题研究：hot_search_topics + video_candidates 两步
+    const hotSearchResearch = cases.find(
+      (c) =>
+        c.expected.primary_intent === "topic_research" &&
+        c.expected.must_require.includes("hot_search_topics") &&
+        c.expected.must_require.includes("video_candidates"),
+    );
+    expect(hotSearchResearch).toBeDefined();
+  });
+
+  /**
+   * M8 批次 C：关联推荐路由覆盖度。
+   * 守护给定视频继续发现 / 单视频正文问题不误触发两条关键判定，
+   * 防止后续改动丢失关联推荐来源边界。
+   */
+  it("M8 关联推荐覆盖：给定视频继续发现 / 单视频正文问题不误触发", () => {
+    // 给定视频且目标是继续发现：must_require 含 related_video_candidates
+    const relatedDiscovery = cases.find(
+      (c) =>
+        c.expected.primary_intent === "topic_research" &&
+        c.expected.must_require.includes("related_video_candidates"),
+    );
+    expect(relatedDiscovery).toBeDefined();
+    expect(relatedDiscovery!.expected.must_not_default).toContain("transcript");
+
+    // 给定视频但问题针对正文：仍走 content_learn，不误触发关联推荐
+    const singleVideoNoRelated = cases.find(
+      (c) =>
+        c.expected.primary_intent === "content_learn" &&
+        c.expected.must_not_default.includes("related_video_candidates"),
+    );
+    expect(singleVideoNoRelated).toBeDefined();
+    expect(singleVideoNoRelated!.expected.must_require).toContain("transcript");
   });
 });

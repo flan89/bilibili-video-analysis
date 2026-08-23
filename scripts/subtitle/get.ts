@@ -472,7 +472,47 @@ export async function getBilibiliSubtitle(
       });
     }
 
-    const discovery = await discoverOfficialSubtitleTracks(client, { aid, cid });
+    let subtitleAbsenceMessage = "字幕轨接口连续两次未观察到该分P的可用官方字幕";
+    let discovery = await discoverOfficialSubtitleTracks(client, { aid, cid });
+    if (discovery.tracks.length === 0) {
+      // 真实测试确认匿名字幕轨接口会对确有字幕的视频偶发返回空轨。
+      // Tool 在内部只做一次有限复核，避免把瞬时空响应误写成“视频没有字幕”，
+      // 同时不把重试责任推给 Agent，防止连续重复请求。
+      try {
+        const rechecked = await discoverOfficialSubtitleTracks(client, { aid, cid });
+        if (rechecked.tracks.length > 0) {
+          discovery = {
+            ...rechecked,
+            warnings: [
+              "字幕轨接口首次返回空结果，有限复核后恢复；本次字幕来源存在短暂波动",
+              ...discovery.warnings,
+              ...rechecked.warnings,
+            ],
+          };
+        } else {
+          discovery = {
+            ...rechecked,
+            warnings: [
+              "字幕轨接口连续两次返回空结果；当前未观察到官方字幕，但匿名接口存在偶发空轨现象",
+              ...discovery.warnings,
+              ...rechecked.warnings,
+            ],
+          };
+        }
+      } catch (error) {
+        // 首次请求已经形成可解释的空结果，补充复核失败不应把整项任务升级成失败；
+        // 保留不确定性并继续走 ASR 降级，由 Agent 最终看到警告。
+        const recheckError = toBilibiliError(error);
+        subtitleAbsenceMessage = "字幕轨接口首次返回空结果，补充复核失败，当前无法确认该分P是否确实没有官方字幕";
+        discovery = {
+          ...discovery,
+          warnings: [
+            `字幕轨接口首次返回空结果，有限复核失败（${recheckError.code}）；当前无法确认官方字幕是否确实缺失`,
+            ...discovery.warnings,
+          ],
+        };
+      }
+    }
     availableTracks = discovery.tracks.map(summarizeTrack);
 
     if (discovery.tracks.length === 0) {
@@ -485,7 +525,7 @@ export async function getBilibiliSubtitle(
         discoveryWarnings: discovery.warnings,
         requestedAt,
         originalReasonCode: "no_official_subtitle",
-        originalMessage: "该分P没有可用的官方字幕",
+        originalMessage: subtitleAbsenceMessage,
       });
     }
 

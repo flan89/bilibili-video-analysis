@@ -9,3 +9,6 @@ export * from "./comments/get.js";
 export * from "./comments/get-replies.js";
 export * from "./visual/get.js";
 export * from "./discovery/search-videos.js";
+export * from "./discovery/popular-videos.js";
+export * from "./discovery/hot-searches.js";
+export * from "./discovery/related-videos.js";

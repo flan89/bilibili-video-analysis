@@ -265,7 +265,7 @@ Agent 负责：
 
 ```text
 阶段一：发现候选
-  Required：video_candidates（搜索结果候选元信息）
+  Required：按用户目标选择发现来源（见 7.1 来源表）
 
 阶段二：分析选中视频
   Required / Optional：由用户 Focus 决定（回到单视频矩阵）
@@ -273,9 +273,22 @@ Agent 负责：
 
 ### 7.1 阶段一：发现候选
 
-- Required：`video_candidates`——用主搜索词查一页候选；候选明显不足或偏离目标时才按发现策略补充变体；
-- 发现阶段的搜索深度由 Depth 决定：`quick` 只看一页；`standard` / `deep` 默认总共查看约 20～40 条候选元信息；
-- 搜索为空、失败或遭遇风控时，按 Tool 的 `acquisition.status` 结构化降级，不编造候选；
+根据用户目标选择 Required 发现来源（来源选择优先于调用 Tool，见 [`discovery-strategy.md`](discovery-strategy.md) §0）：
+
+| 用户目标 | Required | 后续按 Focus 可选 |
+|---|---|---|
+| 关键词找视频 | `video_candidates` | Transcript / Comments / Frames 等 |
+| 查看当前热门 | `popular_video_candidates` | 用户要求分析内容时才取正文证据 |
+| 查看当前热搜 | `hot_search_topics` | 用户要求研究某词时再取 `video_candidates` |
+| 从视频找相关内容 | `related_video_candidates` | 选中后按 Focus 获取正文证据；需要覆盖主题时可补 `video_candidates` |
+| 当前排行榜 | 暂无可用数据，报告 `ranking_snapshot` 能力缺口 | 不用热门或搜索冒充 |
+
+发现来源的通用规则：
+
+- 用户只给主题或问题时，默认仍以关键词搜索（`video_candidates`）为入口；候选明显不足或偏离目标时才按发现策略补充变体；
+- 发现阶段的深度由 Depth 决定：`quick` 只看一页候选或一组快照；`standard` / `deep` 默认总共查看约 20～40 条候选元信息；
+- 来源为空、失败或遭遇风控时，按 Tool 的 `acquisition.status` 结构化降级，不编造候选；
+- 单来源失败时不用其它来源静默冒充（用户要热门而热门失败 → 公开失败，不拿搜索结果假装热门）；
 - 具体搜索词设计、候选选择和停止条件见 [`references/discovery-strategy.md`](discovery-strategy.md)。
 
 ### 7.2 阶段二：分析选中视频
