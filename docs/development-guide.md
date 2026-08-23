@@ -63,7 +63,10 @@ npm run build
 
 ```bash
 node dist/cli.mjs tool metadata '{"video":"BV号或视频链接"}'
-node dist/cli.mjs tool search-videos '{"query":"Agent Skill 设计","order":"relevance"}'
+node dist/cli.mjs tool search-videos '{"query":"Agent Skill 设计","order":"relevance"}' --compact
+node dist/cli.mjs tool popular-videos '{"page":1,"pageSize":20}' --compact
+node dist/cli.mjs tool hot-searches '{"limit":10}' --compact
+node dist/cli.mjs tool related-videos '{"video":"BV号或视频链接","limit":20}' --compact
 node dist/cli.mjs tool subtitle '{"video":"BV号或视频链接"}' --compact
 node dist/cli.mjs tool subtitle '{"video":"BV号或视频链接?p=2"}' --compact
 node dist/cli.mjs tool subtitle '{"video":"BV号或视频链接","page":2,"language":"zh-CN"}' --compact
@@ -94,6 +97,9 @@ ffmpeg 自动安装当前支持 macOS 的 Homebrew 和 Ubuntu/Debian 的 apt。�
 | 命令名 | 主要实现 | Tool 说明 | 职责 |
 |---|---|---|---|
 | `search-videos` | `scripts/discovery/` | `references/tools/video-search.md` | 按单个搜索词取得一页候选视频 |
+| `popular-videos` | `scripts/discovery/` | `references/tools/popular-videos.md` | 获取当前热门视频候选 |
+| `hot-searches` | `scripts/discovery/` | `references/tools/hot-searches.md` | 获取当前热搜词 |
+| `related-videos` | `scripts/discovery/` | `references/tools/related-videos.md` | 获取指定视频的关联推荐候选 |
 | `metadata` | `scripts/metadata/` | `references/tools/metadata.md` | 视频元信息和分P |
 | `subtitle` | `scripts/subtitle/` | `references/tools/subtitle.md` | 官方字幕和本地语音转写 |
 | `danmaku` | `scripts/danmaku/` | `references/tools/danmaku.md` | 带时间位置的弹幕 |
@@ -190,7 +196,7 @@ npm run test:release
 
 普通提交和合并请求由 `.github/workflows/ci.yml` 执行类型检查、离线单元测试和发布物验收。
 
-推送形如 `v1.0.0` 的版本标签后，`.github/workflows/release.yml` 会：
+推送形如 `vX.Y.Z` 的版本标签后，`.github/workflows/release.yml` 会：
 
 1. 检查标签、`package.json` 和 `VERSION` 中的版本是否一致；
 2. 重新执行类型检查、离线单元测试和发布物验收；
@@ -201,8 +207,8 @@ npm run test:release
 发布新版本前先同时更新 `package.json` 与 `VERSION`，提交并推送代码，再创建并推送对应标签：
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 标签触发的发布失败时，不要用同名标签指向另一份代码。修复问题后增加补丁版本并创建新标签，保证已经公开的版本可以稳定回查。

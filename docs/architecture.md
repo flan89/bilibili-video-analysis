@@ -105,7 +105,7 @@ SKILL.md
 - 主文件只保留每次执行都需要的稳定主脉络；
 - 只有当某一步真正需要时才读取对应 reference；
 - 主题发现只在 `topic_research` 中加载；用户已给定具体视频时不进入搜索阶段；
-- 当前里程碑只实现少量能力，不应把主 `SKILL.md` 降级成当前 Tool 的使用说明；
+- 当前公开能力会持续扩展，但不应把主 `SKILL.md` 降级成具体 Tool 的使用说明；
 - 新增 Tool 时扩展 `references/tools/`；
 - 新增认知能力时扩展 `references/analysis/`；
 - 主 Skill 架构应尽量保持稳定。
@@ -192,6 +192,10 @@ Tool 默认无状态并可独立调用：
 get_metadata(video)  → MetadataResult
 get_subtitle(video)  → SubtitleResult
 get_comments(video)  → CommentsResult
+search_videos(query) → VideoSearchResult
+get_popular_videos() → PopularVideosResult
+get_hot_searches()   → HotSearchResult
+get_related_videos(video) → RelatedVideosResult
 ```
 
 每个结果只包含当前职责的数据、稳定视频引用和本次采集状态。
@@ -201,6 +205,8 @@ get_comments(video)  → CommentsResult
 一个 Tool 可以内部取得完成自身职责必需的最小前置信息。例如字幕 Tool 可以内部取得 `aid/cid`，但不能顺便获取评论或执行内容分析。
 
 当前不建立有状态 Tool Service、Asset Store 或跨调用进程内 Session。主题研究由 Agent 在上下文中关联搜索候选和后续的单视频 Tool 结果，不引入程序化的跨视频聚合对象。
+
+关键词搜索、当前热门、热搜词和关联推荐是四种独立的发现来源。它们反映的平台机制不同，Tool 不把结果自动合并或统一排序；Agent 根据用户目标选择来源，并在回答中保留来源差异。
 
 ---
 

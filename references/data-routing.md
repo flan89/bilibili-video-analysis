@@ -15,7 +15,7 @@ Task Routing 已经回答“用户想完成什么”。这里回答：
 
 Data Plan 同时考虑：Intent、Focus、Depth、用户指定范围、数据成本与 Coverage。
 
-## 2. V1 基础数据矩阵
+## 2. 单视频基础数据矩阵
 
 | 数据 | content_learn | visual_decode | audience_insight | market_research | overview |
 |---|---|---|---|---|---|

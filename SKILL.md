@@ -1,6 +1,8 @@
 ---
 name: bilibili-video-analysis
-description: 从主题发现或具体B站视频开始，把视频内容、画面和公开观众反馈转化为可回查的学习与研究结果。适用于 content_learn、visual_decode、audience_insight、显式 market_research、topic_research（主题搜索与跨视频研究）以及这些 Intent 的必要组合。Skill 先理解用户目标，再规划最小证据、调用原子 Tool、按专业分析协议推理，并在证据不足时明确降级；不会为了“完整”抓取无关数据，也不会把单视频信号写成市场已验证。
+description: 从主题搜索、B站当前热门或热搜、给定视频的关联推荐或具体视频开始，把视频正文、画面、弹幕、评论和回复转化为可回查的学习与研究结果。适用于查找和比较B站视频、总结教程与观点、拆解视觉表达、分析观众反馈，以及用户明确提出的产品或市场研究；Skill 按目标获取最小证据，并在数据不足时明确降级。
+license: MIT
+compatibility: 核心数据获取需要 Node.js >=20 及可访问B站的网络；视觉分析另需 ffmpeg/ffprobe，本地 ASR 还需 Python >=3.9、隔离环境与首次模型准备。
 ---
 
 # B站视频分析
@@ -87,13 +89,13 @@ Tool 负责外部数据与确定性处理，不负责语义结论。
 
 只有 Data Routing 确定需要某项数据时，才读取对应 Tool reference，并按其中的当前契约调用。
 
-命令行调用优先使用 Tool reference 推荐的紧凑输出，并复用同一次成功结果。不要只为缩短、截取或改换展示格式而重复请求；紧凑输出中的采集状态和 `warnings` 仍是结论边界的一部分。
+命令行调用可以优先使用 Tool reference 推荐的紧凑输出，并尽量复用已经取得的成功结果；紧凑输出中的采集状态和 `warnings` 仍是结论边界的一部分。
 
 ### 3.1 统一理解 Tool 结果
 
 不同 Tool 的业务数据不同，但 Agent 应统一先判断：
 
-- `outcome`：成功、缺失、需要选择或失败；
+- 顶层执行结果：使用 `outcome` 的 Tool 检查成功、缺失、需要选择或失败；Discovery Tool 检查 `success`；具体语义以对应 Tool reference 为准；
 - `acquisition.status`：`success / partial / missing / failed` 等采集状态；
 - `reasonCode / error`：失败原因与是否可重试；
 - `warnings`：不阻止返回数据、但会影响证据强度或 Coverage 的信息；
@@ -202,7 +204,7 @@ Required Data 求并集
 
 Skill 运行依赖两类外部环境：
 
-- **Core 依赖**：Node.js（≥ 20）+ B 站网络。Core Tool（metadata / subtitle / comments / replies / danmaku）默认以匿名状态请求公开数据。
+- **Core 依赖**：Node.js（≥ 20）+ B 站网络。不依赖本地媒体处理和 ASR 环境的 B站 API 数据获取能力默认以匿名状态请求公开数据。
 - **Lazy 依赖**：ffmpeg（视觉分析 + ASR 音频抽取）、Python 隔离 venv + FunASR（无字幕视频转录）。
 
 **核心原则**：Tool 永远不自动安装。Tool 失败时返回 `setupHint` 字段，Agent 根据 `setupHint` 引导用户授权后调用 setup 命令。

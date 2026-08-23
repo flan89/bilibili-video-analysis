@@ -22,7 +22,7 @@ Data Routing
 ```json
 {
   "objective": "用户当前真正想完成的目标",
-  "primary_intent": "content_learn | visual_decode | audience_insight | market_research | overview",
+  "primary_intent": "content_learn | visual_decode | audience_insight | market_research | topic_research | overview",
   "secondary_intents": ["可选辅助 Intent"],
   "focus": ["开放式语义标签"],
   "depth": "quick | standard | deep",
@@ -38,6 +38,30 @@ Data Routing
     "fallbacks": []
   },
   "routing_notes": ["仅记录不明显的判断"]
+}
+```
+
+`topic_research` 示例：
+
+```json
+{
+  "objective": "比较B站上不同视频如何解释同一种方法",
+  "primary_intent": "topic_research",
+  "secondary_intents": [],
+  "focus": ["method_comparison"],
+  "depth": "standard",
+  "clarification": {
+    "needed": false,
+    "question": null,
+    "reason": null
+  },
+  "data_plan": {
+    "required": ["video_candidates", "transcript"],
+    "optional": ["metadata"],
+    "avoid_by_default": ["comments", "danmaku", "frames"],
+    "fallbacks": ["选中视频缺少官方字幕时评估 ASR；仍不可用则替换候选或公开缺口"]
+  },
+  "routing_notes": ["先取得候选，再只对少量选中视频获取 Transcript"]
 }
 ```
 

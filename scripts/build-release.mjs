@@ -12,7 +12,14 @@ const artifact = path.join(outputRoot, "bilibili-video-analysis");
 const skillText = await readFile(path.resolve("SKILL.md"), "utf8");
 const frontmatterMatch = skillText.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 if (!frontmatterMatch) throw new Error("SKILL.md 缺少有效 YAML frontmatter");
-const allowedKeys = new Set(["name", "description", "license", "allowed-tools", "metadata"]);
+const allowedKeys = new Set([
+  "name",
+  "description",
+  "license",
+  "compatibility",
+  "allowed-tools",
+  "metadata",
+]);
 const topLevelKeys = frontmatterMatch[1]
   .split(/\r?\n/)
   .filter((line) => line.length > 0 && !/^\s/.test(line))
