@@ -1,0 +1,128 @@
+{
+  "code": 0,
+  "message": "OK",
+  "data": [
+    {
+      "aid": 1305094262,
+      "videos": 1,
+      "tid": 251,
+      "tname": "三农",
+      "pic": "http://i1.hdslb.com/bfs/archive/4f999e3367d205099c37a50757d338cc09491318.jpg",
+      "title": "展开说说台湾当归产业【主播说三农】",
+      "pubdate": 1716634841,
+      "desc": "",
+      "duration": 108,
+      "owner": {
+        "mid": 1343321779,
+        "name": "央视农业",
+        "face": "https://i1.hdslb.com/bfs/face/c9e24623ccc91cd26c2894d2a1880dc6dc6a28c4.jpg"
+      },
+      "stat": {
+        "view": 953125,
+        "danmaku": 1390,
+        "reply": 2012,
+        "favorite": 9630,
+        "coin": 14007,
+        "share": 5718,
+        "like": 187289
+      },
+      "bvid": "BV1TM4m1r7xT",
+      "is_ogv": false,
+      "rcmd_reason": ""
+    },
+    {
+      "aid": 1155065659,
+      "videos": 1,
+      "tid": 212,
+      "tname": "美食侦探",
+      "pic": "http://i2.hdslb.com/bfs/archive/80550c65a30bd7c8b8f2d7ee50d78dbed219616f.jpg",
+      "title": "看一看烤鸭的质量怎么样？",
+      "pubdate": 1787373679,
+      "desc": "参考文献：食品科学",
+      "duration": 349,
+      "owner": {
+        "mid": 439478093,
+        "name": "中国食品报融媒体",
+        "face": "https://i2.hdslb.com/bfs/face/41703cc47175657261e088a1efb4906da542719e.jpg"
+      },
+      "stat": {
+        "view": 95749,
+        "danmaku": 276,
+        "reply": 348,
+        "favorite": 546,
+        "coin": 210,
+        "share": 88,
+        "like": 2210
+      },
+      "bvid": "BV1C48C6BEDN",
+      "is_ogv": false,
+      "rcmd_reason": ""
+    },
+    {
+      "aid": 1305094263,
+      "videos": 1,
+      "tid": 251,
+      "tname": "三农",
+      "pic": "http://i1.hdslb.com/bfs/archive/4f999e3367d205099c37a50757d338cc09491318.jpg",
+      "title": "重复出现的同一条关联推荐（标题可能不同）",
+      "pubdate": 1716634841,
+      "desc": "",
+      "duration": 108,
+      "owner": {
+        "mid": 1343321779,
+        "name": "央视农业",
+        "face": "https://i1.hdslb.com/bfs/face/c9e24623ccc91cd26c2894d2a1880dc6dc6a28c4.jpg"
+      },
+      "stat": {
+        "view": 953125,
+        "danmaku": 1390
+      },
+      "bvid": "BV1TM4m1r7xT",
+      "is_ogv": false,
+      "rcmd_reason": ""
+    },
+    {
+      "aid": 1134478524,
+      "season_type": 1,
+      "title": "某部番剧的关联条目",
+      "pic": "http://i0.hdslb.com/bfs/archive/ogv-cover-example.jpg",
+      "desc": "",
+      "duration": 1440,
+      "owner": {
+        "mid": 928123,
+        "name": "哔哩哔哩番剧",
+        "face": "https://i0.hdslb.com/bfs/face/bangumi-official-face.jpg"
+      },
+      "stat": {
+        "view": 123456,
+        "danmaku": 789
+      },
+      "is_ogv": true,
+      "redirect_url": "https://www.bilibili.com/bangumi/play/ep838610",
+      "rcmd_reason": ""
+    },
+    {
+      "aid": 1604978986,
+      "videos": 1,
+      "tid": 76,
+      "tname": "美食制作",
+      "pic": "http://i0.hdslb.com/bfs/archive/missing-title-example.jpg",
+      "title": "",
+      "pubdate": 1652683485,
+      "desc": "缺少标题的异常条目",
+      "duration": 176,
+      "owner": {
+        "mid": 351919471,
+        "name": "蟹老板下饭馆-",
+        "face": "https://i0.hdslb.com/bfs/face/bdda531a646c65121b5e22a9d547b632f3a6a75b.jpg"
+      },
+      "stat": {
+        "view": 18988,
+        "danmaku": 7
+      },
+      "bvid": "BV1WA4y1f7mr",
+      "is_ogv": false,
+      "rcmd_reason": ""
+    }
+  ]
+}

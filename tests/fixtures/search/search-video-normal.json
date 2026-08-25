@@ -1,0 +1,71 @@
+{
+  "code": 0,
+  "message": "0",
+  "data": {
+    "seid": "18207309528723456",
+    "page": 1,
+    "pagesize": 20,
+    "numResults": 235,
+    "result": [
+      {
+        "type": "video",
+        "id": 114550001234567,
+        "author": "示例UP主A",
+        "mid": 12345678,
+        "typeid": 122,
+        "typename": "野生技术协会",
+        "arcurl": "//www.bilibili.com/video/BV1WMgp6aEND",
+        "bvid": "BV1WMgp6aEND",
+        "title": "如何设计一个 <em class=\"keyword\">Agent</em> <em class=\"keyword\">Skill</em>：完整思路与常见坑",
+        "description": "这期视频拆解 <em class=\"keyword\">Agent</em> Skill 的设计方法：从触发时机到工具边界，再到证据回查。适合正在搭建自己工作流的同学。",
+        "picture": "//i0.hdslb.com/bfs/archive/agent-skill-cover-a.jpg",
+        "play": "128000",
+        "video_review": "3200",
+        "favorites": "8800",
+        "tag": "Agent,人工智能,编程,效率工具",
+        "pubdate": 1767225600,
+        "senddate": 1767225600,
+        "duration": "15:32",
+        "upic": "//i0.hdslb.com/bfs/face/user-a.jpg",
+        "rec_tags": []
+      },
+      {
+        "type": "video",
+        "id": 114550009998877,
+        "author": "示例UP主B",
+        "mid": 87654321,
+        "typeid": 23,
+        "typename": "计算机技术",
+        "arcurl": "//www.bilibili.com/video/BV1AbCdEfGh2",
+        "title": "从零实现 <em class=\"keyword\">Agent</em> 工作流（无 <em class=\"keyword\">Skill</em> 也能跑）",
+        "picture": "http://i2.hdslb.com/bfs/archive/agent-workflow-cover-b.jpg",
+        "play": "--",
+        "video_review": 156,
+        "favorites": "--",
+        "pubdate": 1770000000,
+        "senddate": 1770000000,
+        "duration": "1:02:03"
+      },
+      {
+        "type": "video",
+        "id": 114550005556677,
+        "author": "示例UP主C",
+        "mid": 24681357,
+        "typeid": 122,
+        "typename": "野生技术协会",
+        "arcurl": "//www.bilibili.com/video/BV1SkillM7xY",
+        "bvid": "BV1SkillM7xY",
+        "title": "Skill 边界讨论：哪些事不该交给程序",
+        "description": "讨论 Tool 与 Agent 的职责边界，以及为什么固定模板会伤害分析质量。",
+        "picture": "https://i1.hdslb.com/bfs/archive/skill-boundary-cover-c.jpg",
+        "play": 4096,
+        "video_review": 88,
+        "favorites": 512,
+        "tag": "Agent",
+        "pubdate": 1780000000,
+        "senddate": 1780000000,
+        "duration": "58:20"
+      }
+    ]
+  }
+}

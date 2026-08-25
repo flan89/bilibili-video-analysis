@@ -1,12 +1,15 @@
 /**
  * tests/unit/tool-envelope.test.ts: 跨 Tool Envelope 一致性测试.
  *
- * 5 个 Tool:
+ * 9 个 Tool:
  *   - subtitle (scripts/subtitle/get.ts: GetSubtitleOutputSchema)
  *   - danmaku  (scripts/danmaku/get.ts: GetDanmakuOutputSchema)
  *   - comments (scripts/comments/get.ts: GetCommentsOutputSchema)
  *   - metadata (scripts/metadata/get.ts: GetMetadataOutputSchema)
- *   - frames   (scripts/visual/model.ts: GetFramesOutputSchema, */
+ *   - frames   (scripts/visual/model.ts: GetFramesOutputSchema)
+ *   - search-videos (M7) / popular-videos (M8 批次 A) / hot-searches (M8 批次 B)
+ *   - related-videos (M8 批次 C)
+ */
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -14,19 +17,27 @@ import { GetSubtitleOutputSchema } from "../../scripts/index.js";
 import { GetDanmakuOutputSchema } from "../../scripts/index.js";
 import { GetCommentsOutputSchema } from "../../scripts/index.js";
 import { GetMetadataOutputSchema } from "../../scripts/index.js";
+import { SearchVideosOutputSchema } from "../../scripts/index.js";
+import { PopularVideosOutputSchema } from "../../scripts/index.js";
+import { HotSearchesOutputSchema } from "../../scripts/index.js";
+import { RelatedVideosOutputSchema } from "../../scripts/index.js";
 import { GetFramesOutputSchema } from "../../scripts/visual/model.js";
 import {
   AcquisitionRecordSchema,
   AcquisitionStateSchema,
 } from "../../scripts/models/index.js";
 
-/** 5 个 Tool 顶层 OutputSchema 元数据, 测试循环用. */
+/** 9 个 Tool 顶层 OutputSchema 元数据, 测试循环用. */
 const TOOL_OUTPUTS = [
   { name: "subtitle", schema: GetSubtitleOutputSchema, topLevelError: true },
   { name: "danmaku", schema: GetDanmakuOutputSchema, topLevelError: true },
   { name: "comments", schema: GetCommentsOutputSchema, topLevelError: true },
   { name: "metadata", schema: GetMetadataOutputSchema, topLevelError: true },
   { name: "frames", schema: GetFramesOutputSchema, topLevelError: true },
+  { name: "search-videos", schema: SearchVideosOutputSchema, topLevelError: true },
+  { name: "popular-videos", schema: PopularVideosOutputSchema, topLevelError: true },
+  { name: "hot-searches", schema: HotSearchesOutputSchema, topLevelError: true },
+  { name: "related-videos", schema: RelatedVideosOutputSchema, topLevelError: true },
 ] as const;
 
 /**
@@ -146,7 +157,7 @@ describe("Tool Envelope 一致性", () => {
       expect((shape.warnings as z.ZodTypeAny)._def.typeName).toBe("ZodDefault");
     });
 
-    it("dataKind 必须是 DataKindSchema, 10 个 enum 覆盖 metadata/cover/transcript/video/audio/frames/timeline/danmaku/comments/replies", () => {
+    it("dataKind 必须是 DataKindSchema, 14 个 enum 覆盖 metadata/cover/transcript/video/audio/frames/timeline/danmaku/comments/replies/video_candidates/popular_video_candidates/related_video_candidates/hot_search_topics", () => {
       const shape = (AcquisitionRecordSchema as z.ZodObject<z.ZodRawShape>)
         .shape;
       expect(shape.dataKind).toBeDefined();
@@ -168,7 +179,7 @@ describe("Tool Envelope 一致性", () => {
     });
   });
 
-  describe("Happy path: 5 个 Tool 最小合法输出都能 parse", () => {
+  describe("Happy path: 6 个 Tool 最小合法输出都能 parse", () => {
     it("subtitle success", () => {
       const out = GetSubtitleOutputSchema.parse({
         success: true,
@@ -291,9 +302,123 @@ describe("Tool Envelope 一致性", () => {
       });
       expect(out.acquisition?.status).toBe("success");
     });
+
+    it("search-videos success (含 missing 演示: 空结果也是 success=true)", () => {
+      const out = SearchVideosOutputSchema.parse({
+        success: true,
+        query: {
+          keyword: "Agent Skill",
+          order: "relevance",
+          page: 1,
+          pageSize: 20,
+        },
+        candidates: [],
+        pageInfo: {
+          page: 1,
+          pageSize: 20,
+          returnedCount: 0,
+          hasNextPage: false,
+        },
+        observedAt: "2026-08-19T00:00:00.000Z",
+        acquisition: {
+          dataKind: "video_candidates",
+          status: "missing",
+          itemCount: 0,
+          requestedAt: "2026-08-19T00:00:00.000Z",
+        },
+      });
+      expect(out.acquisition.status).toBe("missing");
+      expect(out.success).toBe(true);
+    });
+
+    it("popular-videos success (M8 新 DataKind: popular_video_candidates)", () => {
+      const out = PopularVideosOutputSchema.parse({
+        success: true,
+        candidates: [
+          {
+            video: { bvid: "BV1G48M6XEBt" },
+            title: "当前热门示例条目",
+            stats: { viewCount: 3229743, likeCount: 398925 },
+            category: { id: 65, name: "网络游戏" },
+            discoveryReason: "百万播放",
+            position: 1,
+          },
+        ],
+        pageInfo: {
+          page: 1,
+          pageSize: 20,
+          returnedCount: 1,
+          hasNextPage: true,
+        },
+        observedAt: "2026-08-19T00:00:00.000Z",
+        acquisition: {
+          dataKind: "popular_video_candidates",
+          status: "success",
+          itemCount: 1,
+          requestedAt: "2026-08-19T00:00:00.000Z",
+        },
+      });
+      expect(out.acquisition.dataKind).toBe("popular_video_candidates");
+      expect(out.candidates[0]?.discoveryReason).toBe("百万播放");
+    });
+
+    it("hot-searches success (M8 新 DataKind: hot_search_topics)", () => {
+      const out = HotSearchesOutputSchema.parse({
+        success: true,
+        topics: [
+          {
+            keyword: "国产3A新作实机演示",
+            displayName: "国产3A新作实机演示",
+            position: 1,
+            heatScore: 8452913,
+          },
+          {
+            keyword: "新款旗舰手机发布会",
+            position: 2,
+            isCommercial: true,
+          },
+        ],
+        observedAt: "2026-08-19T00:00:00.000Z",
+        acquisition: {
+          dataKind: "hot_search_topics",
+          status: "success",
+          itemCount: 2,
+          requestedAt: "2026-08-19T00:00:00.000Z",
+        },
+      });
+      expect(out.acquisition.dataKind).toBe("hot_search_topics");
+      expect(out.topics[1]?.isCommercial).toBe(true);
+    });
+
+    it("related-videos success (M8 新 DataKind: related_video_candidates)", () => {
+      const out = RelatedVideosOutputSchema.parse({
+        success: true,
+        seedVideo: { bvid: "BV1C48C6BEDN" },
+        candidates: [
+          {
+            video: { bvid: "BV1TM4m1r7xT" },
+            title: "关联推荐示例条目",
+            stats: { viewCount: 953125, likeCount: 187289 },
+            category: { id: 251, name: "三农" },
+            position: 1,
+          },
+        ],
+        returnedCount: 40,
+        observedAt: "2026-08-19T00:00:00.000Z",
+        acquisition: {
+          dataKind: "related_video_candidates",
+          status: "success",
+          itemCount: 1,
+          requestedAt: "2026-08-19T00:00:00.000Z",
+        },
+      });
+      expect(out.acquisition.dataKind).toBe("related_video_candidates");
+      expect(out.seedVideo?.bvid).toBe("BV1C48C6BEDN");
+      expect(out.returnedCount).toBe(40);
+    });
   });
 
-  describe("Failed path: 5 个 Tool 失败输出都能 parse 且带 reasonCode", () => {
+  describe("Failed path: 7 个 Tool 失败输出都能 parse 且带 reasonCode", () => {
     it("subtitle failed (含 reasonCode 演示)", () => {
       const out = GetSubtitleOutputSchema.parse({
         success: false,
@@ -416,6 +541,121 @@ describe("Tool Envelope 一致性", () => {
       expect(out.acquisition?.status).toBe("failed");
       expect(out.acquisition?.reasonCode).toBe("ffmpeg_unavailable");
       expect(out.error?.retryable).toBe(false);
+    });
+
+    it("search-videos failed (风控: retryable=true 但不应立即连续重试)", () => {
+      const out = SearchVideosOutputSchema.parse({
+        success: false,
+        query: {
+          keyword: "Agent Skill",
+          order: "relevance",
+          page: 1,
+          pageSize: 20,
+        },
+        candidates: [],
+        pageInfo: {
+          page: 1,
+          pageSize: 20,
+          returnedCount: 0,
+          hasNextPage: false,
+        },
+        observedAt: "2026-08-19T00:00:00.000Z",
+        acquisition: {
+          dataKind: "video_candidates",
+          status: "failed",
+          reasonCode: "search_risk_control",
+          message: "搜索失败: B 站搜索接口触发风控 (HTTP 412)",
+          requestedAt: "2026-08-19T00:00:00.000Z",
+        },
+        error: {
+          code: "search_risk_control",
+          message: "B 站搜索接口触发风控 (HTTP 412)",
+          retryable: true,
+          httpStatus: 412,
+        },
+      });
+      expect(out.acquisition.reasonCode).toBe("search_risk_control");
+      expect(out.error?.retryable).toBe(true);
+      expect(out.error?.httpStatus).toBe(412);
+    });
+
+    it("popular-videos failed (业务 -352 风控: retryable=true 但不应立即连续重试)", () => {
+      const out = PopularVideosOutputSchema.parse({
+        success: false,
+        candidates: [],
+        pageInfo: {
+          page: 1,
+          pageSize: 20,
+          returnedCount: 0,
+          hasNextPage: false,
+        },
+        observedAt: "2026-08-19T00:00:00.000Z",
+        acquisition: {
+          dataKind: "popular_video_candidates",
+          status: "failed",
+          reasonCode: "popular_risk_control",
+          message: "热门列表获取失败: B 站热门接口触发风控 (code=-352)",
+          requestedAt: "2026-08-19T00:00:00.000Z",
+        },
+        error: {
+          code: "popular_risk_control",
+          message: "B 站热门接口触发风控 (code=-352)",
+          retryable: true,
+          apiCode: -352,
+        },
+      });
+      expect(out.acquisition.reasonCode).toBe("popular_risk_control");
+      expect(out.error?.retryable).toBe(true);
+      expect(out.error?.apiCode).toBe(-352);
+    });
+
+    it("hot-searches failed (HTTP 412 风控: retryable=true 但不应立即连续重试)", () => {
+      const out = HotSearchesOutputSchema.parse({
+        success: false,
+        topics: [],
+        observedAt: "2026-08-19T00:00:00.000Z",
+        acquisition: {
+          dataKind: "hot_search_topics",
+          status: "failed",
+          reasonCode: "hot_search_risk_control",
+          message: "热搜列表获取失败: B 站热搜接口触发风控 (HTTP 412)",
+          requestedAt: "2026-08-19T00:00:00.000Z",
+        },
+        error: {
+          code: "hot_search_risk_control",
+          message: "B 站热搜接口触发风控 (HTTP 412)",
+          retryable: true,
+          httpStatus: 412,
+        },
+      });
+      expect(out.acquisition.reasonCode).toBe("hot_search_risk_control");
+      expect(out.error?.retryable).toBe(true);
+      expect(out.error?.httpStatus).toBe(412);
+    });
+
+    it("related-videos failed (种子不存在: code=-400, 不可重试)", () => {
+      const out = RelatedVideosOutputSchema.parse({
+        success: false,
+        candidates: [],
+        returnedCount: 0,
+        observedAt: "2026-08-19T00:00:00.000Z",
+        acquisition: {
+          dataKind: "related_video_candidates",
+          status: "failed",
+          reasonCode: "related_api_error",
+          message: "关联推荐获取失败: B 站关联推荐接口返回错误 code=-400: 请求错误",
+          requestedAt: "2026-08-19T00:00:00.000Z",
+        },
+        error: {
+          code: "related_api_error",
+          message: "B 站关联推荐接口返回错误 code=-400: 请求错误",
+          retryable: false,
+          apiCode: -400,
+        },
+      });
+      expect(out.acquisition.reasonCode).toBe("related_api_error");
+      expect(out.error?.retryable).toBe(false);
+      expect(out.error?.apiCode).toBe(-400);
     });
   });
 

@@ -12,7 +12,8 @@ export const SkillCaseSchema = z
   .object({
     id: z.string().min(1),
     category: z.string().min(1),
-    execution: z.enum(["real_video", "fixture_result"]),
+    // M7 新增 real_topic：无给定视频的主题型请求（先搜索发现候选再研究）。
+    execution: z.enum(["real_video", "fixture_result", "real_topic"]),
     tool_outcome: z.enum([
       "success",
       "selection_required",

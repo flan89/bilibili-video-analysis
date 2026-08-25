@@ -1,0 +1,42 @@
+{
+  "code": 0,
+  "message": "0",
+  "data": {
+    "seid": "18207309528722222",
+    "page": 50,
+    "pagesize": 20,
+    "numResults": 1000,
+    "result": [
+      {
+        "type": "video",
+        "id": 114550001112220,
+        "author": "示例UP主F",
+        "mid": 99887766,
+        "arcurl": "//www.bilibili.com/video/BV1CapTotalA",
+        "bvid": "BV1CapTotalA",
+        "title": "宽泛关键词的第一千条结果",
+        "picture": "//i0.hdslb.com/bfs/archive/cap-cover-f.jpg",
+        "play": "12",
+        "video_review": "0",
+        "favorites": "0",
+        "pubdate": 1767225600,
+        "duration": "0:30"
+      },
+      {
+        "type": "video",
+        "id": 114550001112221,
+        "author": "示例UP主G",
+        "mid": 66778899,
+        "arcurl": "//www.bilibili.com/video/BV1CapTotalB",
+        "bvid": "BV1CapTotalB",
+        "title": "宽泛关键词的另一条结果",
+        "picture": "//i0.hdslb.com/bfs/archive/cap-cover-g.jpg",
+        "play": "5",
+        "video_review": "0",
+        "favorites": "1",
+        "pubdate": 1767225600,
+        "duration": "1:00"
+      }
+    ]
+  }
+}

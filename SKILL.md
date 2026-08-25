@@ -1,6 +1,8 @@
 ---
 name: bilibili-video-analysis
-description: 分析单个B站视频并把视频内容、画面和公开观众反馈转化为可回查的学习与研究结果。适用于 content_learn、visual_decode、audience_insight、显式 market_research 以及这些 Intent 的必要组合。Skill 先理解用户目标，再规划最小证据、调用原子 Tool、按专业分析协议推理，并在证据不足时明确降级；不会为了“完整”抓取无关数据，也不会把单视频信号写成市场已验证。
+description: 从主题搜索、B站当前热门或热搜、给定视频的关联推荐或具体视频开始，把视频正文、画面、弹幕、评论和回复转化为可回查的学习与研究结果。适用于查找和比较B站视频、总结教程与观点、拆解视觉表达、分析观众反馈，以及用户明确提出的产品或市场研究；Skill 按目标获取最小证据，并在数据不足时明确降级。
+license: MIT
+compatibility: 核心数据获取需要 Node.js >=20 及可访问B站的网络；视觉分析另需 ffmpeg/ffprobe，本地 ASR 还需 Python >=3.9、隔离环境与首次模型准备。
 ---
 
 # B站视频分析
@@ -40,6 +42,7 @@ description: 分析单个B站视频并把视频内容、画面和公开观众反
 - `visual_decode`
 - `audience_insight`
 - `market_research`
+- `topic_research`
 - `overview`
 
 Focus 是开放集合，不要把测试 case 里的字符串当白名单。
@@ -47,6 +50,8 @@ Focus 是开放集合，不要把测试 case 里的字符串当白名单。
 只有当不同合理解释会显著改变数据路径或分析方法、且低成本步骤无法兼顾时，才问一个简短澄清问题。
 
 **当前 Tool 是否可用，不能反向修改用户真实 Intent。**
+
+用户没有提供具体视频、而是给出主题或问题时，属于 `topic_research`：先按 [`references/discovery-strategy.md`](references/discovery-strategy.md) 发现候选，再对选中视频复用单视频流程。单视频任务不加载该策略。
 
 ## 2. Data Routing：再决定需要什么证据
 
@@ -72,6 +77,10 @@ Tool 负责外部数据与确定性处理，不负责语义结论。
 
 | 数据能力 | Tool reference |
 |---|---|
+| 视频搜索（仅 `topic_research` 阶段一） | [`references/tools/video-search.md`](references/tools/video-search.md) |
+| 当前热门快照（平台热门机制，非排行榜） | [`references/tools/popular-videos.md`](references/tools/popular-videos.md) |
+| 当前热搜词条（搜索关注度快照，非事件背景） | [`references/tools/hot-searches.md`](references/tools/hot-searches.md) |
+| 给定视频的关联推荐（推荐邻接关系，非主题等价） | [`references/tools/related-videos.md`](references/tools/related-videos.md) |
 | 视频元信息 | [`references/tools/metadata.md`](references/tools/metadata.md) |
 | Transcript（官方字幕 + ASR fallback） | [`references/tools/subtitle.md`](references/tools/subtitle.md) |
 | 弹幕 | [`references/tools/danmaku.md`](references/tools/danmaku.md) |
@@ -80,11 +89,13 @@ Tool 负责外部数据与确定性处理，不负责语义结论。
 
 只有 Data Routing 确定需要某项数据时，才读取对应 Tool reference，并按其中的当前契约调用。
 
+命令行调用可以优先使用 Tool reference 推荐的紧凑输出，并尽量复用已经取得的成功结果；紧凑输出中的采集状态和 `warnings` 仍是结论边界的一部分。
+
 ### 3.1 统一理解 Tool 结果
 
 不同 Tool 的业务数据不同，但 Agent 应统一先判断：
 
-- `outcome`：成功、缺失、需要选择或失败；
+- 顶层执行结果：使用 `outcome` 的 Tool 检查成功、缺失、需要选择或失败；Discovery Tool 检查 `success`；具体语义以对应 Tool reference 为准；
 - `acquisition.status`：`success / partial / missing / failed` 等采集状态；
 - `reasonCode / error`：失败原因与是否可重试；
 - `warnings`：不阻止返回数据、但会影响证据强度或 Coverage 的信息；
@@ -118,6 +129,7 @@ Tool 负责外部数据与确定性处理，不负责语义结论。
 - `visual_decode` → [`references/analysis/visual-decode.md`](references/analysis/visual-decode.md)
 - `audience_insight` → [`references/analysis/audience-insight.md`](references/analysis/audience-insight.md)
 - `market_research` → [`references/analysis/market-research.md`](references/analysis/market-research.md)
+- `topic_research` → [`references/analysis/topic-research.md`](references/analysis/topic-research.md)
 
 Analysis Protocol 提供的是**阅读与判断方法**，不是固定报告模板。最终结构服从用户问题。
 
@@ -145,7 +157,7 @@ Required Data 求并集
 - **语义不能串味**：同一评论在 audience 中可以是 Concern，在 market 中可以进一步成为 Pain 候选，但两个判断必须分别满足各自协议；
 - Optional Data 不因“多 Intent”自动升级成 Required；
 - 某一个 Intent 的 Required Data 失败，不等于整项任务失败：完成其它证据足够支持的部分，并明确缺口；
-- `market_research` 的单视频边界不会因为与其它 Intent 组合而变松。
+- `market_research` 的单视频边界不会因为与其它 Intent 组合而变松；跨多个视频也只能增强机会假设，不能升级为“市场已验证”。
 
 ## 6. Grounding：结论要能回到来源
 
@@ -157,7 +169,8 @@ Required Data 求并集
 - 重要结论能否定位到字幕时间、评论 / 回复 ID、弹幕时间或 Frame 时间；
 - 标题、简介、分P标题是否被误当成正文证据；
 - ASR / 平台字幕术语错误是否可能改变结论；
-- 视觉中的“作用”、市场中的“机会”、Audience 中的“共识”等是否被误写成直接事实。
+- 视觉中的“作用”、市场中的“机会”、Audience 中的“共识”等是否被误写成直接事实；
+- 跨视频结论是否定位到了具体视频（BV 号 + 字幕时间 / 评论 ID / 弹幕时间 / Frame 时间），而不是只说“多个视频都提到”。
 
 不必机械给每句话加引用，优先保证**影响结论的证据可回查**。
 
@@ -169,6 +182,7 @@ Required Data 求并集
 - 是否存在 partial、缺失分P、抽样、未展开回复、未覆盖时间段或失败数据源；
 - 当前数据是否支持“整体 / 多数 / 高频 / 共识 / 全片”等强词；
 - 数据为空时，是否只是“当前样本没有观察到”；
+- 主题研究是否公开了搜索范围：搜索词、查询时间、查看的候选量、深入分析的样本和创作者数量；
 - 当前缺口会不会实质改变结论。
 
 **不能把局部数据写成整体结论。**
@@ -190,7 +204,7 @@ Required Data 求并集
 
 Skill 运行依赖两类外部环境：
 
-- **Core 依赖**：Node.js（≥ 20）+ B 站网络。Core Tool（metadata / subtitle / comments / replies / danmaku）默认以匿名状态请求公开数据。
+- **Core 依赖**：Node.js（≥ 20）+ B 站网络。不依赖本地媒体处理和 ASR 环境的 B站 API 数据获取能力默认以匿名状态请求公开数据。
 - **Lazy 依赖**：ffmpeg（视觉分析 + ASR 音频抽取）、Python 隔离 venv + FunASR（无字幕视频转录）。
 
 **核心原则**：Tool 永远不自动安装。Tool 失败时返回 `setupHint` 字段，Agent 根据 `setupHint` 引导用户授权后调用 setup 命令。

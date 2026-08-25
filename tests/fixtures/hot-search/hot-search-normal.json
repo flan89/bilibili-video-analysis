@@ -1,0 +1,19 @@
+{
+  "code": 0,
+  "list": [
+    {"keyword":"国产3A新作实机演示","show_name":"国产3A新作实机演示","icon":"https://i0.hdslb.com/bfs/activity-plat/hot-icon-new.png","heat_score":8452913,"heat_layer":"A","pos":1,"stat_datas":{"is_commercial":"0","stime":"1787411738","etime":"1787584538"}},
+    {"keyword":"城市德比决赛","show_name":"城市德比决赛 vs 卫冕冠军","icon":"http://i0.hdslb.com/bfs/activity-plat/hot-icon-match.png","heat_score":7231048,"heat_layer":"A","pos":2,"stat_datas":{"is_commercial":"0"}},
+    {"keyword":"台风路径最新消息","icon":"","heat_score":6950221,"heat_layer":"B","pos":3,"stat_datas":{"is_commercial":"0"}},
+    {"keyword":"暑期档动画电影","show_name":"暑期档动画电影","icon":"//i0.hdslb.com/bfs/activity-plat/hot-icon-film.png","heat_score":"5810342","heat_layer":"B","pos":"4","stat_datas":{"is_commercial":0}},
+    {"keyword":"新款旗舰手机发布会","show_name":"新款旗舰手机发布会","icon":"https://i0.hdslb.com/bfs/activity-plat/hot-icon-ad.png","heat_score":5104233,"heat_layer":"B","pos":5,"stat_datas":{"is_commercial":"1"}},
+    {"keyword":"高校录取通知书开箱","show_name":"高校录取通知书开箱","icon":"","heat_score":4830112,"pos":6,"stat_datas":{"is_commercial":false}},
+    {"keyword":"自制火箭发射记录","show_name":"自制火箭发射记录","heat_score":4522870,"pos":7},
+    {"keyword":"老字号小吃探店","show_name":"老字号小吃探店","pos":8},
+    {"keyword":"考研择校经验","show_name":"考研择校经验","heat_score":3901455,"pos":9,"stat_datas":{"is_commercial":"0"}},
+    {"keyword":"夜间延时摄影教程","show_name":"夜间延时摄影教程","heat_score":3620981,"pos":10,"stat_datas":{"is_commercial":"0"}}
+  ],
+  "top_list": [],
+  "seid": "4552989185385350399",
+  "timestamp": 1787418059,
+  "total_count": 10
+}

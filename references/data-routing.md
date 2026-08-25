@@ -15,7 +15,7 @@ Task Routing 已经回答“用户想完成什么”。这里回答：
 
 Data Plan 同时考虑：Intent、Focus、Depth、用户指定范围、数据成本与 Coverage。
 
-## 2. V1 基础数据矩阵
+## 2. 单视频基础数据矩阵
 
 | 数据 | content_learn | visual_decode | audience_insight | market_research | overview |
 |---|---|---|---|---|---|
@@ -27,6 +27,8 @@ Data Plan 同时考虑：Intent、Focus、Depth、用户指定范围、数据成
 | replies | - | - | O / Focus / Depth | O / Focus / Depth | - |
 
 这只是默认矩阵；具体 Focus 可以调整 Required / Optional。
+
+`topic_research` 是先发现候选、再分析选中视频的两阶段规划，不在此矩阵中，见 §7。
 
 ## 3. `content_learn`
 
@@ -257,7 +259,56 @@ Agent 负责：
 - 市场规模 / TAM；
 - “值得做 / 应该创业”这类已验证式强结论。
 
-## 7. `overview`
+## 7. `topic_research`：两阶段数据规划
+
+`topic_research` 不适合放进上面的单视频矩阵，因为它天然分两个阶段：
+
+```text
+阶段一：发现候选
+  Required：按用户目标选择发现来源（见 7.1 来源表）
+
+阶段二：分析选中视频
+  Required / Optional：由用户 Focus 决定（回到单视频矩阵）
+```
+
+### 7.1 阶段一：发现候选
+
+根据用户目标选择 Required 发现来源（来源选择优先于调用 Tool，见 [`discovery-strategy.md`](discovery-strategy.md) §0）：
+
+| 用户目标 | Required | 后续按 Focus 可选 |
+|---|---|---|
+| 关键词找视频 | `video_candidates` | Transcript / Comments / Frames 等 |
+| 查看当前热门 | `popular_video_candidates` | 用户要求分析内容时才取正文证据 |
+| 查看当前热搜 | `hot_search_topics` | 用户要求研究某词时再取 `video_candidates` |
+| 从视频找相关内容 | `related_video_candidates` | 选中后按 Focus 获取正文证据；需要覆盖主题时可补 `video_candidates` |
+| 当前排行榜 | 暂无可用数据，报告 `ranking_snapshot` 能力缺口 | 不用热门或搜索冒充 |
+
+发现来源的通用规则：
+
+- 用户只给主题或问题时，默认仍以关键词搜索（`video_candidates`）为入口；候选明显不足或偏离目标时才按发现策略补充变体；
+- 发现阶段的深度由 Depth 决定：`quick` 只看一页候选或一组快照；`standard` / `deep` 默认总共查看约 20～40 条候选元信息；
+- 来源为空、失败或遭遇风控时，按 Tool 的 `acquisition.status` 结构化降级，不编造候选；
+- 单来源失败时不用其它来源静默冒充（用户要热门而热门失败 → 公开失败，不拿搜索结果假装热门）；
+- 具体搜索词设计、候选选择和停止条件见 [`references/discovery-strategy.md`](discovery-strategy.md)。
+
+### 7.2 阶段二：分析选中视频
+
+选中 3～5 个视频后，每个视频的数据需求回到单视频矩阵，按 Focus 决定：
+
+- 主题内容研究（方法比较、共识 / 分歧、各自经验）通常 Required：`transcript`；
+- 评论、回复、弹幕和 Frames 仍按 Focus 决定，**不因“跨视频”自动升级为 Required**；
+- 用户问观众反应 → 只对选中且必要的视频获取评论 / 弹幕；用户问画面 → 只在画面证据确实必要时获取 Frames；
+- Metadata 通常 Optional，只在需要确认发布时间、作者独立性或标签时获取。
+
+### 7.3 跨视频 Coverage
+
+当前 `TaskPlan` 可以表达所需数据类别，不为 topic_research 新建程序化多阶段编排器。具体每个视频实际取得了哪些数据来源，由 Agent 在上下文中维护，并在最终 Coverage 中说明：
+
+- 每个选中视频实际取得了哪些数据；
+- 哪些视频存在无字幕、自动转写、评论不完整或其它缺口；
+- 数据缺失的视频不能与证据完整的视频等强度比较。
+
+## 8. `overview`
 
 Overview 是轻量 preset，不是默认全分析。
 
@@ -277,7 +328,7 @@ Overview 是轻量 preset，不是默认全分析。
 
 Overview 的目的通常是“先知道视频大致是什么，再决定是否深挖”。
 
-## 8. Evidence Gap 与 Fallback
+## 9. Evidence Gap 与 Fallback
 
 分析过程中允许回到 Data Routing，但每次只补当前结论缺少的最小证据。
 
@@ -301,7 +352,7 @@ Tutorial: 字幕描述“点这里”但没有按钮信息
 
 不要因为发生一次 Evidence Gap 就顺便抓所有数据源。
 
-## 9. Coverage 与成本优先级
+## 10. Coverage 与成本优先级
 
 成本优化只能改变：
 
@@ -317,7 +368,7 @@ Tutorial: 字幕描述“点这里”但没有按钮信息
 - Required Data 的必要 Coverage；
 - “全片 / 所有 / 完整”等承诺。
 
-## 10. 多 Intent 组合
+## 11. 多 Intent 组合
 
 多 Intent 时：
 

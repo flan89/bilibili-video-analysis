@@ -124,6 +124,7 @@ Agent 拿到 `transcript.source` 时，应区分三种来源的可靠程度：
 - 指定分P编号不存在时返回 `unknown_page`，不回退到第一P。
 - 显式 `cid` 不属于当前视频时返回 `failed`。
 - 目标语言不存在时返回 `missing`，并保留可用轨道摘要供 Agent 判断下一步。
+- 字幕轨接口首次返回空结果时，Tool 会在内部再复核一次。连续两次为空或补充复核失败时进入 ASR 降级，并在 `warnings` 中说明空轨不确定性；Agent 不要为确认空结果立即重复整次 Tool 调用。
 - 元信息前置请求失败时，由本 Tool 返回字幕任务的结构化失败结果，不要求 Agent 拼接两次调用。
 - `Transcript.complete=false` 或 `acquisition.status=partial` 时，Agent 必须在分析中保留覆盖限制。
 - 本地 ASR 环境缺失时会返回 `setupHint`。先执行其中的 `planCommand` 并向用户说明成本；只有得到明确授权后才能执行 `applyCommand`。Tool 本身不会安装依赖或下载模型。
@@ -153,7 +154,9 @@ node <skill-root>/dist/cli.mjs tool subtitle '{"video":"BV号或视频链接","p
 - 连续 `segmentNumber`；
 - 采集、清理、多P、降级和错误状态。
 
-它会省略每条字幕重复的长 sourceId 和扩展 metadata，避免普通视频的结构化输出不必要地占用 Agent 上下文。完整 Tool 函数和不带 `--compact` 的命令仍返回原始 JSON 契约。
+它会省略每条字幕重复的长 sourceId 和扩展 metadata，避免普通视频的结构化输出不必要地占用 Agent 上下文，但仍保留全部字幕正文，因此较长视频的输出依然可能很大。如果当前运行环境容易截断长输出，可优先在调用时把结果保存到本地文件，再从文件中分段读取或进行确定性整理；是否需要重新调用由 Agent 根据当前结果和执行环境自行判断。完整 Tool 函数和不带 `--compact` 的命令仍返回原始 JSON 契约。
+
+引用 `official_ai` 或 `asr` 字幕时，不要把按上下文修正后的文本静默放进引号。具体引用规则见 [`content-learn`](../analysis/content-learn.md) §3.5。
 
 需要检查完整程序结果时使用：
 

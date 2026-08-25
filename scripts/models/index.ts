@@ -17,3 +17,4 @@ export * from "./task.js";
 export * from "./frame.js";
 export * from "./danmaku.js";
 export * from "./comment.js";
+export * from "./discovery.js";

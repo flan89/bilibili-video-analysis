@@ -13,6 +13,14 @@ export const DataKindSchema = z.enum([
   "danmaku",
   "comments",
   "replies",
+  /** M7 新增: 主题发现阶段的视频搜索候选列表 (V2 topic_research 阶段一). */
+  "video_candidates",
+  /** M8 新增: 当前热门页面快照的视频候选列表 (平台热门机制, 非全站排名). */
+  "popular_video_candidates",
+  /** M8 新增: 给定种子视频的平台关联推荐候选列表 (批次 C 接入). */
+  "related_video_candidates",
+  /** M8 新增: 平台当前热搜词列表 (批次 B 接入); 是主题词, 不是视频. */
+  "hot_search_topics",
 ]);
 export type DataKind = z.infer<typeof DataKindSchema>;
 

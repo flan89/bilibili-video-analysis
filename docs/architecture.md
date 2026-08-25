@@ -87,6 +87,9 @@ SKILL.md
 ├─ 规划证据
 │   └─ references/data-routing.md
 │
+├─ 主题发现（仅 topic_research）
+│   └─ references/discovery-strategy.md
+│
 ├─ 获取数据
 │   └─ references/tools/*.md
 │
@@ -101,7 +104,8 @@ SKILL.md
 
 - 主文件只保留每次执行都需要的稳定主脉络；
 - 只有当某一步真正需要时才读取对应 reference；
-- 当前里程碑只实现少量能力，不应把主 `SKILL.md` 降级成当前 Tool 的使用说明；
+- 主题发现只在 `topic_research` 中加载；用户已给定具体视频时不进入搜索阶段；
+- 当前公开能力会持续扩展，但不应把主 `SKILL.md` 降级成具体 Tool 的使用说明；
 - 新增 Tool 时扩展 `references/tools/`；
 - 新增认知能力时扩展 `references/analysis/`；
 - 主 Skill 架构应尽量保持稳定。
@@ -188,6 +192,10 @@ Tool 默认无状态并可独立调用：
 get_metadata(video)  → MetadataResult
 get_subtitle(video)  → SubtitleResult
 get_comments(video)  → CommentsResult
+search_videos(query) → VideoSearchResult
+get_popular_videos() → PopularVideosResult
+get_hot_searches()   → HotSearchResult
+get_related_videos(video) → RelatedVideosResult
 ```
 
 每个结果只包含当前职责的数据、稳定视频引用和本次采集状态。
@@ -196,7 +204,9 @@ get_comments(video)  → CommentsResult
 
 一个 Tool 可以内部取得完成自身职责必需的最小前置信息。例如字幕 Tool 可以内部取得 `aid/cid`，但不能顺便获取评论或执行内容分析。
 
-当前 V1 不建立有状态 Tool Service、Asset Store 或跨调用进程内 Session。
+当前不建立有状态 Tool Service、Asset Store 或跨调用进程内 Session。主题研究由 Agent 在上下文中关联搜索候选和后续的单视频 Tool 结果，不引入程序化的跨视频聚合对象。
+
+关键词搜索、当前热门、热搜词和关联推荐是四种独立的发现来源。它们反映的平台机制不同，Tool 不把结果自动合并或统一排序；Agent 根据用户目标选择来源，并在回答中保留来源差异。
 
 ---
 
@@ -204,23 +214,26 @@ get_comments(video)  → CommentsResult
 
 ```text
 scripts/
-├── bilibili/       # B站请求、协议解析和平台字段转换
+├── bilibili/       # 多个能力共享的B站请求、签名、错误和公共协议
 ├── cli/            # 统一 Runtime 命令入口与 Agent 紧凑视图
 ├── models/         # Tool 输入输出、VideoRef、来源对象和状态
 ├── metadata/       # 元信息 Tool
 ├── subtitle/       # 官方字幕与 ASR fallback
 ├── comments/       # 评论与回复 Tool
 ├── danmaku/        # 弹幕 Tool
+├── discovery/      # 主题发现 Tool
 └── visual/         # 视频流与关键帧 Tool
 ```
 
 ### `scripts/bilibili/*`
 
-平台适配层。B站原始字段和二进制协议不能扩散到 Tool 输出或 Skill 工作流。
+多个能力共同使用的平台基础层，例如请求客户端、WBI 签名、公共错误、通用二进制协议和播放地址解析。某个能力专属的接口协议不因来自B站就统一堆入此目录。
 
 ### 各能力目录
 
-一类 Tool 解决一个明确的数据问题。不能演变成 `analyze_bilibili_video()`。
+一类 Tool 解决一个明确的数据问题。该能力专属的 B站适配代码与 Tool 放在同一目录，使用 `bilibili-adapter.ts`、`bilibili-raw-schema.ts` 或带渠道名称的等价命名；适配文件负责把平台字段转换为稳定内部模型。
+
+B站原始字段只能停留在这些平台适配文件和必要的公共协议文件中，不能扩散到 Tool 输出、确定性业务处理或 Skill 工作流。目录位置服从“领域专属代码就近放置、跨领域代码进入共享层”，不能演变成 `analyze_bilibili_video()`。
 
 ### `scripts/cli/*`
 

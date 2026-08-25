@@ -15,6 +15,14 @@ import { z } from "zod";
 
 /** 允许在 verification 中出现的工具名集合。 */
 export const VERIFIABLE_TOOL_NAMES = new Set([
+  // M7 新增：主题发现阶段的视频搜索 Tool（CLI 名 search-videos，归一化为 search）。
+  "search",
+  // M8 新增：当前热门 Tool（CLI 名 popular-videos，归一化为 popular）。
+  "popular",
+  // M8 批次 B 新增：当前热搜 Tool（CLI 名 hot-searches，归一化为 hot-search）。
+  "hot-search",
+  // M8 批次 C 新增：关联推荐 Tool（CLI 名 related-videos，归一化为 related）。
+  "related",
   "metadata",
   "subtitle",
   "comments",

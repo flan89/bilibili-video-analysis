@@ -57,6 +57,27 @@ const SkillCaseCategorySchema = z.enum([
   "degrade_subtitle_failure",
   "degrade_danmaku_empty",
   "stop_insufficient_coverage",
+  // M7 topic_research 场景 (M7 批次 B)
+  "topic_quick_finding",
+  "topic_standard_research",
+  "topic_search_empty",
+  "topic_search_risk_control",
+  "topic_audience_question",
+  "topic_visual_question",
+  "topic_market_combo",
+  // M7 V1 回归 (M7 批次 B)
+  "single_video_v1_regression",
+  // M8 当前热门场景 (M8 批次 A)
+  "popular_snapshot_stop",
+  "popular_deep_dive",
+  "popular_source_failure",
+  "popular_trend_boundary",
+  // M8 当前热搜场景 (M8 批次 B)
+  "hot_search_faithful_list",
+  "hot_search_single_word_dive",
+  // M8 关联推荐场景 (M8 批次 C)
+  "related_no_recursion",
+  "related_failure_no_substitution",
 ]);
 
 /**
@@ -64,6 +85,14 @@ const SkillCaseCategorySchema = z.enum([
  * eval/verification.ts 的 VERIFIABLE_TOOL_NAMES 保持一致。
  */
 const VERIFIABLE_TOOL_NAMES = new Set([
+  // M7 新增：视频搜索 Tool（CLI 名 search-videos，归一化为 search）。
+  "search",
+  // M8 新增：当前热门 Tool（CLI 名 popular-videos，归一化为 popular）。
+  "popular",
+  // M8 批次 B 新增：当前热搜 Tool（CLI 名 hot-searches，归一化为 hot-search）。
+  "hot-search",
+  // M8 批次 C 新增：关联推荐 Tool（CLI 名 related-videos，归一化为 related）。
+  "related",
   "metadata",
   "subtitle",
   "comments",
@@ -81,14 +110,21 @@ const SkillCaseSchema = z.object({
   id: z.string().min(1),
   /** 当前 M1 必须覆盖的内容学习或降级分支。 */
   category: SkillCaseCategorySchema,
-  /** 真实视频案例或注入固定 Tool 结果的边界案例。 */
-  execution: z.enum(["real_video", "fixture_result"]),
+  /**
+   * 真实视频案例、注入固定 Tool 结果的边界案例，或 M7 主题型请求（无给定视频）。
+   * 注意: M7 的空结果 / 风控行为测试属于 fixture_result (注入固定搜索结果),
+   * 不依赖真实网络偶发的 missing / 412, 保证可重复执行.
+   */
+  execution: z.enum(["real_video", "fixture_result", "real_topic"]),
   /** 当前可用于重复执行真实验收的公开视频；平台变化后允许替换。 */
   sample_video: z.string().url().optional(),
   /** 测试样本目标分P的 cid，只供记录和核对，不注入自然用户请求。 */
   sample_cid: z.string().min(1).optional(),
-  /** `{{video}}` 在执行时替换为目标视频 URL 或 BV号。 */
-  user_request: z.string().includes("{{video}}"),
+  /**
+   * `{{video}}` 在执行时替换为目标视频 URL 或 BV号。
+   * 注入固定结果的主题型行为测试没有给定视频，不含占位符。
+   */
+  user_request: z.string().min(1),
   /** 该案例需要提供给 Agent 的字幕 Tool 结果类型。 */
   tool_outcome: z.enum([
     "success",
@@ -122,23 +158,34 @@ function loadSkillCases(): unknown {
 }
 
 describe("M1 Skill 行为评估案例", () => {
-  it("33 条案例覆盖：M1 content_learn 三个正向 + 三个 Focus 子类 + 全部必要降级分支 + M3 audience_insight 两个 Focus + M5.3 跨 Intent 协同 + M4 market_research 5 条 + M4.1 Positive-path 5 条 + M6 跨 Intent 4 + 降级 2 + 停止 1", () => {
-    const cases = z.array(SkillCaseSchema).length(34).parse(loadSkillCases());
+  it("50 条案例覆盖：M1 content_learn 三个正向 + 三个 Focus 子类 + 全部必要降级分支 + M3 audience_insight 两个 Focus + M5.3 跨 Intent 协同 + M4 market_research 5 条 + M4.1 Positive-path 5 条 + M6 跨 Intent 4 + 降级 2 + 停止 1 + M7 topic_research 7 + V1 回归 1 + M8 当前热门 4 + M8 当前热搜 2 + M8 关联推荐 2", () => {
+    const cases = z.array(SkillCaseSchema).length(50).parse(loadSkillCases());
     const ids = new Set(cases.map((item) => item.id));
     const categories = new Set(cases.map((item) => item.category));
 
     expect(ids.size).toBe(cases.length);
     expect(categories).toEqual(new Set(SkillCaseCategorySchema.options));
-    expect(cases.filter((item) => item.execution === "real_video")).toHaveLength(28);
+    expect(cases.filter((item) => item.execution === "real_video")).toHaveLength(29);
     expect(
       cases
         .filter((item) => item.execution === "real_video")
         .every((item) => item.sample_video),
     ).toBe(true);
+    // 声明了 sample_video 的 case 必须含 {{video}} 占位符 (执行时要替换成真实视频);
+    // 反向不强制: fixture_result 既可以是注入固定结果的行为测试 (不含占位符),
+    // 也可以是占位符注入演示 (含占位符), 两种形态都允许.
+    for (const c of cases) {
+      if (c.sample_video !== undefined) {
+        expect(
+          c.user_request.includes("{{video}}"),
+          `case ${c.id} (${c.execution}) 声明了 sample_video 但 user_request 缺 {{video}} 占位符`,
+        ).toBe(true);
+      }
+    }
   });
 
   it("三个 Focus 强化子类必须存在，且期望覆盖全片（quick 任务除外）", () => {
-    const cases = z.array(SkillCaseSchema).length(34).parse(loadSkillCases());
+    const cases = z.array(SkillCaseSchema).length(50).parse(loadSkillCases());
     const focusCases = cases.filter((item) =>
       ["high_value_knowledge", "viewpoint_curation", "tool_scenario_mapping"].includes(
         item.category,
@@ -160,7 +207,7 @@ describe("M1 Skill 行为评估案例", () => {
   });
 
   it("声明 verification 字段的 case：工具名必须在白名单内", () => {
-    const cases = z.array(SkillCaseSchema).length(34).parse(loadSkillCases());
+    const cases = z.array(SkillCaseSchema).length(50).parse(loadSkillCases());
     for (const c of cases) {
       if (!c.verification) continue;
       for (const t of [
@@ -183,7 +230,7 @@ describe("M1 Skill 行为评估案例", () => {
    * 真正需要 metadata 的 case（如基于标题的封面分析）应显式声明。
    */
   it("普通 content_learn case 不强制调用 metadata", () => {
-    const cases = z.array(SkillCaseSchema).length(34).parse(loadSkillCases());
+    const cases = z.array(SkillCaseSchema).length(50).parse(loadSkillCases());
     const pureContentLearnCases = cases.filter(
       (c) =>
         c.category !== "subtitle_missing" &&
@@ -219,7 +266,7 @@ describe("M1 Skill 行为评估案例", () => {
    *  - audience case 的 tool_outcome 都是 success (受 Tool Availability 限制)
    */
   it("audience case 必调 comments 或 danmaku, 不调 subtitle", () => {
-    const cases = z.array(SkillCaseSchema).length(34).parse(loadSkillCases());
+    const cases = z.array(SkillCaseSchema).length(50).parse(loadSkillCases());
     const audienceCases = cases.filter((item) =>
       item.id.startsWith("audience-"),
     );
@@ -238,7 +285,7 @@ describe("M1 Skill 行为评估案例", () => {
   });
 
   it("audience case 的 mustCallTools / mustNotCallTools 不冲突", () => {
-    const cases = z.array(SkillCaseSchema).length(34).parse(loadSkillCases());
+    const cases = z.array(SkillCaseSchema).length(50).parse(loadSkillCases());
     const audienceCases = cases.filter((item) =>
       item.id.startsWith("audience-"),
     );

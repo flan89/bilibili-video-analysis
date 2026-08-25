@@ -1,0 +1,13 @@
+{
+  "code": 0,
+  "list": [
+    {"keyword":"正常的热搜词条","show_name":"正常的热搜词条","icon":"","heat_score":6210034,"pos":1,"stat_datas":{"is_commercial":"0"}},
+    {"show_name":"缺少 keyword 字段的异常条目","icon":"","pos":2},
+    {"keyword":"   ","show_name":"空白搜索词条","icon":"","heat_score":1200,"pos":3},
+    {"keyword":"另一个正常的热搜词条","show_name":"另一个正常的热搜词条","heat_score":4310990,"pos":4,"stat_datas":{"is_commercial":"1"}}
+  ],
+  "top_list": [],
+  "seid": "4552989185385350400",
+  "timestamp": 1787418059,
+  "total_count": 4
+}
