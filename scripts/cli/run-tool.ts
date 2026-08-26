@@ -53,24 +53,28 @@ async function main(): Promise<void> {
 
   if (!sub || sub === "help" || sub === "-h" || sub === "--help") {
     process.stdout.write(USAGE);
-    process.exit(0);
+    process.exitCode = 0;
+    return;
   }
 
   const cmd = COMMANDS.find((c) => c.name === sub);
   if (!cmd) {
     process.stderr.write(`Error: unknown command "${sub}"\n\n`);
     process.stderr.write(USAGE);
-    process.exit(2);
+    process.exitCode = 2;
+    return;
   }
 
   const rest = cmd.consumeAll ? argv.slice(1) : argv;
   const code = await cmd.fn(rest);
-  process.exit(code);
+  // 不直接调用 process.exit()：字幕等 Tool 可能输出超过 stdout 管道缓冲区的 JSON。
+  // 设置退出码后让 Node.js 自然退出，才能等待标准输出完整写入，避免 64 KiB 处截断。
+  process.exitCode = code;
 }
 
 main().catch((e) => {
   process.stderr.write(
     `Error: runtime CLI crashed: ${(e as Error).message}\n`,
   );
-  process.exit(1);
+  process.exitCode = 1;
 });

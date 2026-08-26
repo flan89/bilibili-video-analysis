@@ -11,7 +11,7 @@
 #
 # 不在 lock 但 ASR 用到的 (依赖 funasr / modelscope 自带):
 #   numpy, librosa, soundfile, hydra-core, omegaconf, tokenizers,
-#   huggingface_hub, kaldiio, soxr, torchaudio, torch-complex
+#   huggingface_hub, kaldiio, soxr, torch-complex
 #
 # 加新依赖前先 review: 是否必要, 是否 funasr 自带, 装 / 升级风险.
 # 不要盲目 "pip install 一下试试", V1 锁版本原则就是稳定优先.
@@ -23,7 +23,10 @@ funasr==1.4.2
 modelscope==1.39.1
 
 # PyTorch 运行时
-torch==2.13.0
+torch==2.11.0
+
+# FunASR 的 AutoModel 加载音频时直接导入；FunASR 本身没有声明该依赖。
+torchaudio==2.11.0
 
 # 音频 I/O (funasr AudioDataset 间接用到)
 numpy==2.5.2

@@ -64,7 +64,10 @@ export async function checkAsr(): Promise<CapabilityCheck> {
   const media = await checkMedia();
   const runtime = inspectAsrRuntime();
   const venvImport = runtime.checks.isolatedVenv === "ok"
-    ? await commandCheck(dataPaths.asrVenvPython(), ["-c", "import funasr, modelscope, torch; print(funasr.__version__)"])
+    ? await commandCheck(dataPaths.asrVenvPython(), [
+        "-c",
+        "import funasr, modelscope, torch, torchaudio; from funasr import AutoModel; print(funasr.__version__)",
+      ])
     : { state: "missing" as const, detail: "隔离环境尚未创建" };
   const checks: Record<string, CheckState> = {
     python: python.state,

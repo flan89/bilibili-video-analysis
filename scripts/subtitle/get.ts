@@ -662,8 +662,8 @@ export async function getBilibiliSubtitle(
  * D14 fallback: Level 1 官方字幕缺失时, 尝试 Level 3 ASR 全链路.
  *
  * 行为:
- * - ASR 成功 → 返回 outcome=success, transcript 来自 ASR (source="asr"),
- *   acquisition 反映"通过 ASR fallback 获得"
+ * - ASR 成功或部分成功 → 返回 outcome=success, transcript 来自 ASR (source="asr"),
+ *   acquisition 保留 success / partial 状态及识别阶段的告警
  * - ASR 失败 → 返回原 missing 状态 + acquisition.warnings 追加 asr_unavailable
  *
  * 不向 Agent 隐藏 ASR 尝试: outcome=success 时 acquisition.source="funasr",
@@ -681,15 +681,21 @@ async function tryAsrFallback(input: {
 }): Promise<GetSubtitleOutput> {
   try {
     const asrResult = await runAsrTranscript({ bvid: input.bvid, cid: input.cid });
-    if (asrResult.acquisition.status === "success") {
-      // ASR 成功: 返回 success 结果, transcript source="asr"
+    if (
+      asrResult.acquisition.status === "success" ||
+      asrResult.acquisition.status === "partial"
+    ) {
+      // 部分成功通常只是少量过短语音片段被过滤，已有字幕仍然可以用于后续分析。
+      const isPartial = asrResult.acquisition.status === "partial";
       const acquisition = makeAcquisition({
-        status: "success",
+        status: asrResult.acquisition.status,
         source: "funasr",
         requestedAt: input.requestedAt,
-        message: "Level 1 官方字幕缺失, 通过 Level 3 ASR fallback 获得 Transcript",
+        message: isPartial
+          ? "Level 1 官方字幕缺失, 通过 Level 3 ASR fallback 获得部分 Transcript"
+          : "Level 1 官方字幕缺失, 通过 Level 3 ASR fallback 获得 Transcript",
         itemCount: asrResult.transcript.segments.length,
-        warnings: input.discoveryWarnings,
+        warnings: [...input.discoveryWarnings, ...asrResult.acquisition.warnings],
         metadata: {
           cid: input.cid,
           fallbackFrom: input.originalReasonCode,

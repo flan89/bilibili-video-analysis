@@ -51,6 +51,8 @@ export interface AgentSubtitleOutput {
   fallback: GetSubtitleOutput["fallback"];
   /** Tool 失败时返回。 */
   error: GetSubtitleOutput["error"];
+  /** 本地媒体或语音识别能力缺失时，保留可执行的环境准备提示。 */
+  setupHint: GetSubtitleOutput["setupHint"];
 }
 
 /**
@@ -100,5 +102,6 @@ export function toAgentSubtitleOutput(result: GetSubtitleOutput): AgentSubtitleO
     pageChoices: result.pageChoices,
     fallback: result.fallback,
     error: result.error,
+    setupHint: result.setupHint,
   };
 }

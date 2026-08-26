@@ -277,6 +277,28 @@ describe("弹幕 model 标准化", () => {
       expect(() => DanmakuSchema.parse(danmaku)).not.toThrow();
     });
 
+    it("保留平台返回的大于 10 的 weight，不让单条真实数据拖垮整段弹幕", () => {
+      const result = normalizeDanmakuReply(
+        {
+          elems: [
+            {
+              id: 1n,
+              progress: 1000n,
+              content: "真实范围回归样本",
+              weight: 11n,
+            },
+          ],
+        },
+        "999",
+        1,
+        1,
+        false,
+      );
+
+      expect(result.segments[0]?.weight).toBe(11);
+      expect(() => DanmakuSchema.parse(result)).not.toThrow();
+    });
+
     it("DanmakuPoolSchema 接受合法池", () => {
       expect(DanmakuPoolSchema.parse("normal")).toBe("normal");
       expect(DanmakuPoolSchema.parse("subtitle")).toBe("subtitle");

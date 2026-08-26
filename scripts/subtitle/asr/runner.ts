@@ -8,8 +8,8 @@
  * - 不引入 IPC/HTTP 复杂度, 单层 spawn 即可
  * - Python 失败 → 返回结构化 AcquisitionRecord (status="failed"), 不抛异常
  *   (D10: 数据源失败时让 Agent 获得结构化失败信息)
- * - 超时: 默认 180s (ASR 慢启动 30s + 长视频 4 分钟上限), 可通过
- *   `BILIBILI_SKILL_ASR_TIMEOUT_MS` 环境变量覆盖 (单测用, 避免跑 180s 真实等待)
+ * - 超时: 默认 10 分钟, 可通过 `BILIBILI_SKILL_ASR_TIMEOUT_MS` 环境变量覆盖。
+ *   语音识别耗时取决于视频长度与机器性能，外层调用超时必须比这里更长。
  * - Python 默认用隔离 venv (Data Home/runtime/python/venv/bin/python),
  *   BILIBILI_SKILL_PYTHON 覆盖 (单测 / CI 用系统 python)
  * - 缓存路径: 通过 paths.ts 的 cachePaths 解析 (BILIBILI_SKILL_CACHE_DIR 覆盖)
@@ -42,8 +42,8 @@ const PYTHON = process.env.BILIBILI_SKILL_PYTHON ?? dataPaths.asrVenvPython();
  */
 const CACHE_DIR_OVERRIDE = process.env.BILIBILI_SKILL_CACHE_DIR;
 
-/** 单次 ASR 调用的硬超时默认值 (ms). 30s 模型加载 + 4 分钟视频长度上限估算. */
-const DEFAULT_ASR_TIMEOUT_MS = 180_000;
+/** 单次 ASR 调用的硬超时默认值 (ms)，兼顾二十分钟左右视频在普通机器上的转写。 */
+const DEFAULT_ASR_TIMEOUT_MS = 10 * 60_000;
 
 /**
  * 解析 ASR 超时 (ms). 优先级: `BILIBILI_SKILL_ASR_TIMEOUT_MS` 环境变量 > 默认值.
@@ -298,11 +298,15 @@ function runPipelineWithTimeout(
 
     const workDir = cachePaths.asrWork();
     mkdirSync(workDir, { recursive: true });
+    // Unix 下创建独立进程组，超时时才能同时终止 pipeline.py 及其语音识别子进程。
+    // 否则只杀父进程，真正占用算力的子进程仍会在后台继续运行。
+    const useProcessGroup = process.platform !== "win32";
     const child = spawn(
       PYTHON,
       [PIPELINE_SCRIPT, bvid, ...(cid ? [cid] : [])],
       {
         cwd: workDir,
+        detached: useProcessGroup,
         stdio: ["ignore", "pipe", "pipe"],
         env: {
           ...process.env,
@@ -313,11 +317,23 @@ function runPipelineWithTimeout(
       },
     );
 
+    const terminatePipeline = (signal: NodeJS.Signals): void => {
+      if (useProcessGroup && child.pid) {
+        try {
+          process.kill(-child.pid, signal);
+          return;
+        } catch {
+          // 进程组可能已经退出，继续尝试终止直接子进程。
+        }
+      }
+      child.kill(signal);
+    };
+
     const timer = setTimeout(() => {
       timedOut = true;
-      child.kill("SIGTERM");
+      terminatePipeline("SIGTERM");
       // 5s 宽限期, 强杀
-      setTimeout(() => child.kill("SIGKILL"), 5000);
+      setTimeout(() => terminatePipeline("SIGKILL"), 5000);
     }, getAsrTimeoutMs());
 
     child.stdout?.on("data", (chunk: Buffer) => {

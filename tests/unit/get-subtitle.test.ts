@@ -483,6 +483,40 @@ describe("getBilibiliSubtitle ASR fallback (D14)", () => {
     expect(result.transcript).toBeUndefined();
   });
 
+  it("Level 1 缺失 + ASR 部分成功 → 保留可用字幕和部分完成状态", async () => {
+    vi.mocked(runAsrTranscript).mockResolvedValue({
+      transcript: {
+        source: "asr",
+        language: "zh-CN",
+        cid: "3001002001",
+        segments: [
+          { id: "asr-0", startSeconds: 0, endSeconds: 2, text: "部分识别结果" },
+        ],
+        complete: false,
+      },
+      acquisition: {
+        dataKind: "transcript",
+        status: "partial",
+        source: "funasr",
+        itemCount: 1,
+        warnings: ["asr_vad_filtered_short_segments: 过滤了少量过短片段"],
+      },
+    });
+
+    const result = await getBilibiliSubtitle(
+      { video: "BV15wGR6CEhY" },
+      { client: new SubtitleFixtureClient({ view: rawView("subtitle-view-none.json") }) },
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.outcome).toBe("success");
+    expect(result.acquisition.status).toBe("partial");
+    expect(result.acquisition.warnings).toContain(
+      "asr_vad_filtered_short_segments: 过滤了少量过短片段",
+    );
+    expect(result.transcript?.segments).toHaveLength(1);
+  });
+
   it("ASR 运行环境缺失 → 返回可执行的 doctor / plan / apply 提示", async () => {
     vi.mocked(runAsrTranscript).mockResolvedValue({
       transcript: { source: "asr", language: "zh-CN", segments: [], complete: false },

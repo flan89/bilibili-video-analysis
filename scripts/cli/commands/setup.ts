@@ -491,7 +491,10 @@ async function applyAsr(doctorBefore: SetupPlan["doctorSnapshot"]): Promise<Appl
   if (!pipRes.ok) return results;
 
   // Step 4: 验证 funasr import
-  const importRes = await runCommandStreaming(venvPython, ["-c", "import funasr; print(funasr.__version__)"], {
+  const importRes = await runCommandStreaming(venvPython, [
+    "-c",
+    "import funasr, torchaudio; from funasr import AutoModel; print(funasr.__version__)",
+  ], {
     label: "verify funasr",
     timeoutMs: 30_000,
     useSudo: false,

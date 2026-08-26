@@ -104,4 +104,32 @@ describe("字幕 Agent 紧凑输出", () => {
     expect(output.pageChoices?.map((page) => page.cid)).toEqual(["cid-1", "cid-2"]);
     expect(output.transcript).toBeUndefined();
   });
+
+  it("语音识别环境缺失时保留 setupHint", () => {
+    const result = GetSubtitleOutputSchema.parse({
+      success: false,
+      outcome: "missing",
+      video: { bvid: "BV1TEST", cid: "cid-1" },
+      acquisition: {
+        dataKind: "transcript",
+        status: "missing",
+        reasonCode: "no_official_subtitle",
+        message: "没有官方字幕",
+        warnings: [],
+      },
+      availableTracks: [],
+      setupHint: {
+        capability: "asr",
+        reason: "语音识别环境尚未准备完成",
+        doctorCommand: { executable: "node", args: ["cli.mjs", "doctor"] },
+        planCommand: { executable: "node", args: ["cli.mjs", "setup", "asr", "--plan"] },
+        applyCommand: { executable: "node", args: ["cli.mjs", "setup", "asr", "--apply"] },
+      },
+    });
+
+    const output = toAgentSubtitleOutput(result);
+
+    expect(output.setupHint?.capability).toBe("asr");
+    expect(output.setupHint?.applyCommand.args).toContain("--apply");
+  });
 });

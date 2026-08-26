@@ -92,8 +92,8 @@ export const DanmakuSegmentSchema = z.object({
   midHash: z.string().optional(),
   /** 弹幕发送时间 (ISO 8601), 来自 ctime. */
   sendTime: z.string().optional(),
-  /** 智能屏蔽权重 0-10. */
-  weight: z.number().int().min(0).max(10).optional(),
+  /** 平台智能屏蔽权重。该字段可能超过 10，只保留原值，不解释其业务含义。 */
+  weight: z.number().int().nonnegative().optional(),
 
   /** 弹幕池. */
   pool: DanmakuPoolSchema,

@@ -80,6 +80,8 @@ def download_m4s(url: str, output_path: Path) -> None:
     req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(req, timeout=120) as r:
         data = r.read()
+    # ASR 工作目录是可再生缓存，新机器或缓存被清理后 data/raw 不一定存在。
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(data)
 
 
