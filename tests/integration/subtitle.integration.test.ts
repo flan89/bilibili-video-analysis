@@ -3,6 +3,7 @@ import { BilibiliClient } from "../../scripts/bilibili/client.js";
 import {
   getBilibiliSubtitle,
 } from "../../scripts/subtitle/get.js";
+import type { RunAsrTranscriptResult } from "../../scripts/subtitle/asr/runner.js";
 
 /**
  * 真实网络测试默认跳过，避免普通开发与持续集成受 B站接口变化、风控影响。
@@ -18,11 +19,37 @@ const knownNoSubtitleVideo = process.env.BILIBILI_NO_SUBTITLE_VIDEO ?? "BV1774Uz
 const multiPartVideo = process.env.BILIBILI_MULTIPART_SUBTITLE_VIDEO;
 const suite = enabled ? describe : describe.skip;
 
+/**
+ * 本文件只验证真实的 B站官方字幕链路。固定返回 ASR 不可用，避免测试结果受本机
+ * 是否已安装 FunASR、模型是否已下载以及视频时长影响。
+ */
+async function unavailableAsr(): Promise<RunAsrTranscriptResult> {
+  return {
+    transcript: {
+      source: "asr",
+      language: "zh-CN",
+      segments: [],
+      complete: false,
+    },
+    acquisition: {
+      dataKind: "transcript",
+      status: "failed",
+      source: "funasr",
+      reasonCode: "asr_disabled_for_integration_test",
+      message: "当前集成测试只验证官方字幕链路",
+      warnings: [],
+    },
+  };
+}
+
 suite("bilibili.get_subtitle 真实集成测试", () => {
   it("能从已知有字幕的公开视频得到带时间戳 Transcript", async () => {
     const client = new BilibiliClient({ cookie: process.env.BILIBILI_COOKIE });
     // Tool 内部已对首次空轨做一次有限复核，集成测试不再从外层重复整次调用。
-    const result = await getBilibiliSubtitle({ video: knownSubtitleVideo }, { client });
+    const result = await getBilibiliSubtitle(
+      { video: knownSubtitleVideo },
+      { client, runAsr: unavailableAsr },
+    );
 
     expect(result.success).toBe(true);
     expect(result.outcome).toBe("success");
@@ -34,7 +61,10 @@ suite("bilibili.get_subtitle 真实集成测试", () => {
 
   it("已知无字幕视频返回 missing，而不是程序失败", async () => {
     const client = new BilibiliClient({ cookie: process.env.BILIBILI_COOKIE });
-    const result = await getBilibiliSubtitle({ video: knownNoSubtitleVideo }, { client });
+    const result = await getBilibiliSubtitle(
+      { video: knownNoSubtitleVideo },
+      { client, runAsr: unavailableAsr },
+    );
 
     expect(result.outcome).toBe("missing");
     expect(result.acquisition.status).toBe("missing");

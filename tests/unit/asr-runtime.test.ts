@@ -25,7 +25,7 @@ describe("ASR Runtime 状态核验", () => {
     const manifest: AsrRuntimeManifest = {
       runtimeManifestVersion: 1,
       asrEnvironmentVersion: 1,
-      pythonMin: "3.9",
+      pythonMin: "3.10",
       models: [
         { key: "fsmnVad", id: "iic/vad", revision: "vad-r1" },
         { key: "senseVoice", id: "iic/sense", revision: "sense-r1" },

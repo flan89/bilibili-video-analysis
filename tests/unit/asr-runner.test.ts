@@ -246,33 +246,52 @@ describe("runAsrTranscript", () => {
       .rejects.toThrow(/spawn .*失败/);
   });
 
-  it("超时 (短时间内未完成)", async () => {
-    // 不发 close 事件, 模拟卡住. 用真实计时器 + 短超时 (10ms)
-    // 避免 fake timers 与 setImmediate 交叉的兼容性问题.
+  it("超时后进程响应 SIGTERM 退出时取消后续 SIGKILL", async () => {
+    vi.useFakeTimers();
     const child = new EventEmitter() as EventEmitter & {
+      pid: number;
       stdout: Readable | null;
       stderr: Readable | null;
       kill: ReturnType<typeof vi.fn>;
     };
+    child.pid = 43210;
     child.stdout = null;
     child.stderr = null;
     child.kill = vi.fn();
     mockSpawn.mockReturnValue(child as never);
+    const processKill = vi.spyOn(process, "kill").mockReturnValue(true);
 
-    // 通过环境变量把超时缩到 10ms, 真实计时器等待即可
     const previous = process.env.BILIBILI_SKILL_ASR_TIMEOUT_MS;
     process.env.BILIBILI_SKILL_ASR_TIMEOUT_MS = "10";
     try {
       const promise = runAsrTranscript({ bvid: "BV1test", cid: "123" });
-      // 等 50ms 让 SIGTERM/SIGKILL timer 全部触发, kill 被调用
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      // 模拟进程在 SIGKILL 后退出, 触发 close
+      expect(mockSpawn.mock.calls[0]?.[2]).toMatchObject({
+        detached: process.platform !== "win32",
+      });
+
+      await vi.advanceTimersByTimeAsync(10);
+      if (process.platform === "win32") {
+        expect(child.kill).toHaveBeenCalledTimes(1);
+        expect(child.kill).toHaveBeenCalledWith("SIGTERM");
+      } else {
+        expect(processKill).toHaveBeenCalledTimes(1);
+        expect(processKill).toHaveBeenCalledWith(-child.pid, "SIGTERM");
+      }
+
+      // 模拟进程在宽限期内正常退出，此后不应再补发 SIGKILL。
       child.emit("close", -1);
       const result = await promise;
-      expect(child.kill).toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(5000);
+
+      if (process.platform === "win32") {
+        expect(child.kill).toHaveBeenCalledTimes(1);
+      } else {
+        expect(processKill).toHaveBeenCalledTimes(1);
+      }
       expect(result.acquisition.status).toBe("failed");
       expect(result.acquisition.reasonCode).toBe("asr_timeout");
     } finally {
+      processKill.mockRestore();
       if (previous === undefined) {
         delete process.env.BILIBILI_SKILL_ASR_TIMEOUT_MS;
       } else {

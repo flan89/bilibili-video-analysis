@@ -295,6 +295,7 @@ function runPipelineWithTimeout(
     let stdout = "";
     let stderr = "";
     let settled = false;
+    let forceKillTimer: NodeJS.Timeout | undefined;
 
     const workDir = cachePaths.asrWork();
     mkdirSync(workDir, { recursive: true });
@@ -333,8 +334,13 @@ function runPipelineWithTimeout(
       timedOut = true;
       terminatePipeline("SIGTERM");
       // 5s 宽限期, 强杀
-      setTimeout(() => terminatePipeline("SIGKILL"), 5000);
+      forceKillTimer = setTimeout(() => terminatePipeline("SIGKILL"), 5000);
     }, getAsrTimeoutMs());
+
+    const clearTerminationTimers = (): void => {
+      clearTimeout(timer);
+      if (forceKillTimer) clearTimeout(forceKillTimer);
+    };
 
     child.stdout?.on("data", (chunk: Buffer) => {
       stdout += chunk.toString("utf-8");
@@ -346,7 +352,7 @@ function runPipelineWithTimeout(
     child.on("error", (err) => {
       if (settled) return;
       settled = true;
-      clearTimeout(timer);
+      clearTerminationTimers();
       rejectOuter(
         new Error(
           `spawn ${PYTHON} 失败: ${err.message} (Python 解释器是否可用?)`,
@@ -357,7 +363,7 @@ function runPipelineWithTimeout(
     child.on("close", (code) => {
       if (settled) return;
       settled = true;
-      clearTimeout(timer);
+      clearTerminationTimers();
 
       const spawnResult: SpawnResult = {
         success: code === 0,

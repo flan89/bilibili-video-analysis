@@ -1,7 +1,7 @@
 {
   "runtimeManifestVersion": 1,
   "asrEnvironmentVersion": 2,
-  "pythonMin": "3.9",
+  "pythonMin": "3.10",
   "models": [
     {
       "key": "fsmnVad",

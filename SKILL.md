@@ -2,7 +2,7 @@
 name: bilibili-video-analysis
 description: 从主题搜索、B站当前热门或热搜、给定视频的关联推荐或具体视频开始，把视频正文、画面、弹幕、评论和回复转化为可回查的学习与研究结果。适用于查找和比较B站视频、总结教程与观点、拆解视觉表达、分析观众反馈，以及用户明确提出的产品或市场研究；Skill 按目标获取最小证据，并在数据不足时明确降级。
 license: MIT
-compatibility: 核心数据获取需要 Node.js >=20 及可访问B站的网络；视觉分析另需 ffmpeg/ffprobe，本地 ASR 还需 Python >=3.9、隔离环境与首次模型准备。
+compatibility: 核心数据获取需要 Node.js >=20 及可访问B站的网络；视觉分析另需 ffmpeg/ffprobe，本地 ASR 还需 Python >=3.10、隔离环境与首次模型准备。
 ---
 
 # B站视频分析

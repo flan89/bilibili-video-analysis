@@ -23,7 +23,10 @@ import {
   type VideoMetadata,
 } from "../metadata/model.js";
 import { cleanTranscript } from "./preprocessing.js";
-import { runAsrTranscript } from "./asr/runner.js";
+import {
+  runAsrTranscript,
+  type RunAsrTranscriptResult,
+} from "./asr/runner.js";
 import { getBilibiliMetadata } from "../metadata/get.js";
 import { makeSetupHint } from "../lib/setup-hint.js";
 
@@ -80,7 +83,7 @@ export const SubtitlePageChoiceSchema = VideoPageSchema.pick({
   durationSeconds: true,
 });
 
-/** 无官方字幕时给 Agent 的显式后续建议；本 Tool 不会自行执行 ASR。 */
+/** 官方字幕和自动 ASR 均未取得正文时，给 Agent 的显式后续建议。 */
 export const SubtitleFallbackSchema = z.object({
   /** 下一条可选策略：提取音频后进行自动语音识别。 */
   strategy: z.literal("audio_to_asr"),
@@ -171,6 +174,8 @@ export type GetSubtitleOutput = z.infer<typeof GetSubtitleOutputSchema>;
 /** 依赖注入用于离线单测，也允许调用方复用带 Cookie 的 Client。 */
 export interface GetSubtitleDependencies {
   client?: BilibiliSubtitleClient;
+  /** 可替换的 ASR 执行入口，便于只验证官方字幕链路的集成测试隔离本机环境。 */
+  runAsr?: (input: { bvid: string; cid?: string }) => Promise<RunAsrTranscriptResult>;
 }
 
 function summarizeTrack(track: SubtitleTrackCandidate): SubtitleTrackSummary {
@@ -298,7 +303,7 @@ function selectTrack(
  * 获取并清理官方字幕。
  *
  * Tool 自行解析视频和获取字幕接口需要的最小元信息；Agent 不需要先调用 Metadata
- * Tool 或传递共享对象。无字幕时只给出后续建议，不会自动下载音频或执行 ASR。
+ * Tool 或传递共享对象。官方字幕缺失时会尝试 ASR；若环境不可用，则返回后续建议。
  */
 export async function getBilibiliSubtitle(
   rawInput: GetSubtitleInput,
@@ -306,6 +311,7 @@ export async function getBilibiliSubtitle(
 ): Promise<GetSubtitleOutput> {
   const input = GetSubtitleInputSchema.parse(rawInput);
   const client = dependencies.client ?? new BilibiliClient();
+  const runAsr = dependencies.runAsr ?? runAsrTranscript;
   const requestedAt = new Date().toISOString();
   let resolvedInput;
   try {
@@ -469,6 +475,7 @@ export async function getBilibiliSubtitle(
         requestedAt,
         originalReasonCode: "no_official_subtitle",
         originalMessage: "BILIBILI_SKILL_FORCE_ASR=1 跳过 Level 1 官方字幕, 直接尝试 Level 3 ASR",
+        runAsr,
       });
     }
 
@@ -526,6 +533,7 @@ export async function getBilibiliSubtitle(
         requestedAt,
         originalReasonCode: "no_official_subtitle",
         originalMessage: subtitleAbsenceMessage,
+        runAsr,
       });
     }
 
@@ -678,9 +686,10 @@ async function tryAsrFallback(input: {
   requestedAt: string;
   originalReasonCode: string;
   originalMessage: string;
+  runAsr: (input: { bvid: string; cid?: string }) => Promise<RunAsrTranscriptResult>;
 }): Promise<GetSubtitleOutput> {
   try {
-    const asrResult = await runAsrTranscript({ bvid: input.bvid, cid: input.cid });
+    const asrResult = await input.runAsr({ bvid: input.bvid, cid: input.cid });
     if (
       asrResult.acquisition.status === "success" ||
       asrResult.acquisition.status === "partial"

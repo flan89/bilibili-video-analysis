@@ -18,6 +18,11 @@ import { promisify } from "node:util";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { dataPaths, runtimePaths } from "../../lib/paths.js";
+import {
+  ASR_PYTHON_MIN_VERSION,
+  isAsrPythonSupported,
+  parsePythonMajorMinor,
+} from "../../lib/python-version.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -171,7 +176,7 @@ function buildAsrSteps(): PlanItem[] {
     {
       step: "检测 Python 3",
       scope: "system",
-      description: "PATH 找 python3 (要求 >= 3.9)",
+      description: `PATH 找 python3 (要求 >= ${ASR_PYTHON_MIN_VERSION})`,
       requiresSudo: false,
       estimatedMB: 0,
       estimatedSeconds: 2,
@@ -394,13 +399,15 @@ async function findSystemPython(): Promise<
   const cmd = process.platform === "win32" ? "py" : "python3";
   try {
     const { stdout } = await execFileAsync(cmd, ["--version"], { timeout: 5000, windowsHide: true });
-    const m = stdout.match(/Python (\d+\.\d+)/);
-    if (!m) return { kind: "missing", hint: `无法解析 Python 版本: ${stdout}` };
-    const [major, minor] = m[1]!.split(".").map(Number);
-    if ((major ?? 0) < 3 || (major === 3 && (minor ?? 0) < 9)) {
-      return { kind: "missing", hint: `Python ${m[1]} 太老, 需要 3.9+` };
+    const parsed = parsePythonMajorMinor(stdout);
+    if (!parsed) return { kind: "missing", hint: `无法解析 Python 版本: ${stdout}` };
+    if (!isAsrPythonSupported(stdout)) {
+      return {
+        kind: "missing",
+        hint: `Python ${parsed.version} 太老, 需要 ${ASR_PYTHON_MIN_VERSION}+`,
+      };
     }
-    return { kind: "python3", cmd, version: m[1]! };
+    return { kind: "python3", cmd, version: parsed.version };
   } catch (e) {
     const err = e as NodeJS.ErrnoException;
     if (err.code === "ENOENT") {

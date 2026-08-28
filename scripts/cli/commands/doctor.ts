@@ -4,6 +4,7 @@ import { promisify } from "node:util";
 import os from "node:os";
 import { dataPaths } from "../../lib/paths.js";
 import { inspectAsrRuntime } from "../../lib/asr-runtime.js";
+import { ASR_PYTHON_MIN_VERSION, isAsrPythonSupported } from "../../lib/python-version.js";
 
 const execFileAsync = promisify(execFile);
 type CheckState = "ok" | "missing" | "error";
@@ -25,11 +26,6 @@ async function commandCheck(command: string, args: string[]): Promise<{ state: C
     const err = error as NodeJS.ErrnoException;
     return { state: err.code === "ENOENT" ? "missing" : "error", detail: err.message };
   }
-}
-
-function pythonAtLeast39(versionText: string): boolean {
-  const match = versionText.match(/Python (\d+)\.(\d+)/);
-  return !!match && (Number(match[1]) > 3 || (Number(match[1]) === 3 && Number(match[2]) >= 9));
 }
 
 export async function checkCore(): Promise<CapabilityCheck> {
@@ -60,7 +56,7 @@ export async function checkMedia(): Promise<CapabilityCheck> {
 export async function checkAsr(): Promise<CapabilityCheck> {
   const systemCommand = process.platform === "win32" ? "py" : "python3";
   const python = await commandCheck(systemCommand, ["--version"]);
-  if (python.state === "ok" && !pythonAtLeast39(python.detail)) python.state = "error";
+  if (python.state === "ok" && !isAsrPythonSupported(python.detail)) python.state = "error";
   const media = await checkMedia();
   const runtime = inspectAsrRuntime();
   const venvImport = runtime.checks.isolatedVenv === "ok"
@@ -80,7 +76,11 @@ export async function checkAsr(): Promise<CapabilityCheck> {
     capability: "asr",
     checks,
     status: Object.values(checks).every((value) => value === "ok") ? "ok" : "unavailable",
-    details: { python: `${python.detail}; 需要 >=3.9`, funasrImport: venvImport.detail, ...runtime.details },
+    details: {
+      python: `${python.detail}; 需要 >=${ASR_PYTHON_MIN_VERSION}`,
+      funasrImport: venvImport.detail,
+      ...runtime.details,
+    },
   };
 }
 
